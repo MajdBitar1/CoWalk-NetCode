@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 4452619041349670567}
   - component: {fileID: 698998771895384633}
   - component: {fileID: 1434798857619680641}
-  - component: {fileID: 1987086902274621371}
+  - component: {fileID: 8334697476654458483}
   m_Layer: 0
   m_Name: AuraVisual
   m_TagString: Aura
@@ -84,7 +84,7 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!114 &1987086902274621371
+--- !u!114 &8334697476654458483
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -93,7 +93,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1934453940815594847}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7e70564acd872734d9ea1ca33a9f1e30, type: 3}
+  m_Script: {fileID: 11500000, guid: c29e45bb193e3c345b49048f9eb57904, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   SafeSeparationZone: 5
@@ -101,7 +101,7 @@ MonoBehaviour:
   StartingValue: 12
   StartingColor: {r: 1, g: 0.9882353, b: 0, a: 0.5}
   EndingColor: {r: 1, g: 0.3254902, b: 0, a: 0.5}
-  PowerValue: 1.8
+  PowerValue: 1
   OtherPlayer: {fileID: 0}
   AuraState: 0
   AuraBroken: 0
