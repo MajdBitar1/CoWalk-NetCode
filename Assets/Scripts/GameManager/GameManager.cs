@@ -1,3 +1,5 @@
+using System;
+using System.Buffers.Binary;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -5,6 +7,7 @@ using Meta.XR.MultiplayerBlocks.Shared;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Audio;
+using static UnityEngine.CullingGroup;
 
 public class GameManager : Singleton<GameManager>
 {
@@ -15,9 +18,9 @@ public class GameManager : Singleton<GameManager>
     public static GameObject Experimenter, Participant;
     public static bool PlayersReady = false;
 
-    [SerializeField] private GameObject localOrigin;
-
     [SerializeField] private AudioMixer AudioMixer;
+
+    [SerializeField] TracingSetup Tracer;
 
     public int previousPlayerCount = 0;
 
@@ -27,13 +30,31 @@ public class GameManager : Singleton<GameManager>
 
     public override void OnNetworkSpawn()
     {
-        //origin = GameObject.Find("origin");
-        //if (origin == null)
-        //{
-        //    Debug.LogError("[GM] Origin not found!");
-        //}
+        if (IsServer)
+        {
+            // Initialize the conditions to false
+            AuraState.Value = false;
+            RhythmState.Value = false;
+            TracingState.Value = false;
+        }
+        else
+        {
+            AuraState.OnValueChanged += ConditionChanged;
+            RhythmState.OnValueChanged += ConditionChanged;
+            TracingState.OnValueChanged += ConditionChanged;
+            ApplyConditionChange();
+        }
+    }
 
-        //localOrigin = FindFirstObjectByType<PlayerDataTransmitter>().gameObject;
+    public override void OnNetworkDespawn()
+    {
+        AuraState.OnValueChanged -= ConditionChanged;
+        RhythmState.OnValueChanged -= ConditionChanged;
+        TracingState.OnValueChanged -= ConditionChanged;
+
+        // Clean up the PlayerRefList when the GameManager is destroyed
+        PlayerRefList.Clear();
+        AudioMixer.FindSnapshot("NoFoot").TransitionTo(0.1f);
     }
 
     void FixedUpdate()
@@ -56,7 +77,6 @@ public class GameManager : Singleton<GameManager>
         if (count != previousPlayerCount)
         {
             previousPlayerCount = count;
-            Debug.Log("[GM] Player List Updated, Count: " + count);
             PlayerRefList = new List<GameObject>(players);
             DefineLocalPlayer();
         }
@@ -70,20 +90,11 @@ public class GameManager : Singleton<GameManager>
             if (PlayerRefList[i].GetComponent<AvatarEntity>().IsLocal)
             {
                 LocalPlayerObject = PlayerRefList[i];
-                //Debug
-                //REMOVE THIS LATER
-                //Experimenter = LocalPlayerObject;
                 Debug.Log("[GM] Local Player Defined: " + LocalPlayerObject.name);
             }
             else
             {
                 RemotePlayerObject = PlayerRefList[i];
-                //Participant = RemotePlayerObject;
-                if (RemotePlayerObject.GetComponentInChildren<AuraManager>() == null)
-                {
-                    //GameObject aura = Instantiate(AuraVisual, RemotePlayerObject.transform);
-                    //aura.transform.localPosition = new Vector3(0, 0, 0);
-                }
                 Debug.Log("[GM] Remote Player Defined: " + RemotePlayerObject.name);
             }
         }
@@ -100,13 +111,17 @@ public class GameManager : Singleton<GameManager>
         Debug.Log("[GM] Participant Defined: " + LocalPlayerObject.name);
         Participant = LocalPlayerObject;
     }
-
-    [ContextMenu("Set Aura")]
-    public void DEMO()
+    public int TryUpdateConditions(bool aura, bool rhythm, bool tracing)
     {
-        UpdateConditionsServerRpc(true, true, false);
+        if (Experimenter == null || Participant == null)
+        {
+            return -1;
+        }
+        UpdateConditionsServerRpc(aura, rhythm, tracing);
+        return 0;
     }
-    [ServerRpc]
+
+    [ServerRpc(RequireOwnership = false)]
     public void UpdateConditionsServerRpc(bool aura, bool rhythm, bool tracing)
     {
         AuraState.Value = aura;  // Direct server-side modification
@@ -115,6 +130,11 @@ public class GameManager : Singleton<GameManager>
         ApplyConditionChange();
     }
 
+
+    private void ConditionChanged(bool previous, bool current)
+    {
+        ApplyConditionChange();
+    }
     private void ApplyConditionChange()
     {
         //Enable Aura
@@ -140,24 +160,14 @@ public class GameManager : Singleton<GameManager>
         if (TracingState.Value)
         {
             //Enable Tracing
+            Tracer.InitiateTracing();
             Debug.Log("[GM] Tracing Enabled");
         }
         else
         {
             //Disable Tracing
+            Tracer.EndTracing();
             Debug.Log("[GM] Tracing Disabled");
         }
-    }
-
-    private void OnDisable()
-    {
-        // Clean up the PlayerRefList when the GameManager is destroyed
-        PlayerRefList.Clear();
-        AudioMixer.FindSnapshot("NoFoot").TransitionTo(0.1f);
-    }
-
-    public GameObject GetOrigin()
-    {
-        return localOrigin;
     }
 }

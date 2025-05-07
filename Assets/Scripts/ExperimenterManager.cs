@@ -3,10 +3,8 @@ using UnityEngine;
 public class ExperimenterManager : MonoBehaviour
 {
     [SerializeField] GameObject toggleMenu, statsMenu;
-
     [SerializeField] GameObject LeftHandRay, RightHandRay;
-
-    private bool _ShowMenu = false;
+    private int state = -1;
 
     private void Start()
     {
@@ -14,46 +12,53 @@ public class ExperimenterManager : MonoBehaviour
         statsMenu.SetActive(false);
         LeftHandRay.SetActive(false);
         RightHandRay.SetActive(false);
-    }
+        state = -1;
 
-    public void ConnectToExperimenter()
-    {
-
+        //Debug
+        //ShowAll();
     }
 
     private void Update()
     {
-        if (OVRInput.GetUp(OVRInput.Button.Two) && GameManager.Experimenter == GameManager.LocalPlayerObject)
+        if (OVRInput.GetUp(OVRInput.Button.Two)) // && GameManager.Experimenter == GameManager.LocalPlayerObject
         {
-            ShowMenu();
+            state++;
+            if (state>2)
+            {
+                state = -1;
+            }
+            UpdateState(state);
+        }
+    }
+
+    void UpdateState(int state)
+    {
+        switch (state)
+        {
+            case 0:
+                //Show all
+                LeftHandRay.SetActive(true);
+                RightHandRay.SetActive(true);
+                toggleMenu.SetActive(true);
+                statsMenu.SetActive(true);
+                break;
+            case 1:
+                LeftHandRay.SetActive(false);
+                RightHandRay.SetActive(false);
+                toggleMenu.SetActive(false);
+                break;
+            case 2:
+                statsMenu.SetActive(false);
+                break;
+            case -1:
+                break;
         }
     }
 
     [ContextMenu("Show Menu")]
-    public void ShowMenu()
+    public void ShowAll()
     {
-        _ShowMenu = !_ShowMenu;
-        if (_ShowMenu)
-        {
-            LeftHandRay.SetActive(true);
-            RightHandRay.SetActive(true);
-
-            //Vector3 InfrontOfPlayer = Vector3.Cross(Camera.main.transform.forward.normalized, Camera.main.transform.up.normalized).normalized;
-
-            //statsMenu.gameObject.transform.forward = Camera.main.transform.forward.normalized;
-            //statsMenu.gameObject.transform.position = GameManager.Experimenter.gameObject.transform.position + Camera.main.transform.forward.normalized * 3  + new Vector3(0, 1f, 0);
-            statsMenu.SetActive(true);
-            
-            //toggleMenu.gameObject.transform.forward = InfrontOfPlayer;
-            //toggleMenu.gameObject.transform.position = GameManager.Experimenter.gameObject.transform.position + InfrontOfPlayer * 3 + new Vector3(0, 1f, 0);
-            toggleMenu.SetActive(true);
-        }
-        else
-        {
-            statsMenu.SetActive(false);
-            toggleMenu.SetActive(false);
-            LeftHandRay.SetActive(false);
-            RightHandRay.SetActive(false);
-        }
+        state++;
+        UpdateState(state);
     }
 }

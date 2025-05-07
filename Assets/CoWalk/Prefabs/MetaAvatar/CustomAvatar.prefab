@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 4241672352704102906}
   - component: {fileID: 7640324904365982063}
   - component: {fileID: 7218022689814112206}
+  - component: {fileID: 8030596264654162734}
   m_Layer: 6
   m_Name: CustomAvatar
   m_TagString: Player
@@ -50,7 +51,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  GlobalObjectIdHash: 1958040370
+  GlobalObjectIdHash: 237167537
   InScenePlacedSourceGlobalObjectIdHash: 0
   AlwaysReplicateAsRoot: 0
   SynchronizeTransform: 1
@@ -214,6 +215,21 @@ MonoBehaviour:
     rightAnkleJoint:
       enableOverride: 0
       overrideTransform: {fileID: 0}
+--- !u!114 &8030596264654162734
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7695565440553817789}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 76448144f7110074b8065cd335bc8edf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Speed: 0
+  CycleDuration: 0
+  Direction: {x: 0, y: 0, z: 0}
 --- !u!1001 &4595392624283123227
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -323,6 +339,10 @@ PrefabInstance:
     - target: {fileID: 308817123823361508, guid: ca36f565db2b9d94aae058593867355d, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6302777349928096532, guid: ca36f565db2b9d94aae058593867355d, type: 3}
+      propertyPath: stepDistance
+      value: 0.75
       objectReference: {fileID: 0}
     - target: {fileID: 7464067322297370049, guid: ca36f565db2b9d94aae058593867355d, type: 3}
       propertyPath: m_Name

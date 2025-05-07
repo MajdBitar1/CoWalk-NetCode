@@ -7,7 +7,6 @@ public class TeleportationManager : NetworkBehaviour
     public NetworkVariable<bool> m_playerOneReady = new NetworkVariable<bool>();
     public NetworkVariable<bool> m_playerTwoReady = new NetworkVariable<bool>();
     [SerializeField] private GameObject _StartingArea;
-    //[SerializeField] private GameObject _Park;
 
 
     private bool ExperimenterReadyViz = false;
@@ -20,7 +19,6 @@ public class TeleportationManager : NetworkBehaviour
     private void Awake()
     {
         _StartingArea.SetActive(true);
-        //_Park.SetActive(false);
     }
 
     //If the Value of m_playerOneReady or m_playerTwoReady changes, this function will be called
@@ -76,69 +74,38 @@ public class TeleportationManager : NetworkBehaviour
     {
         yield return new WaitForSeconds(2.0f);
         _StartingArea.SetActive(false);
-        GameManager.Instance.DEMO();
-        //_Park.SetActive(true);
     }
 
     void UpdateParticipantArea(bool state)
     {
         if (ParticipantReadyViz != state)
         {
+            var TargetMat = DefaultMat;
             if (state)
             {
-                VisualizeParticipant();
+                TargetMat = ParticipantReadyMat;
             }
-            else
+            for (int i = 0; i < ParticipantAreaRenderers.Length; i++)
             {
-                VisualizeResetParticipant();
+                ParticipantAreaRenderers[i].material = TargetMat;
             }
             ParticipantReadyViz = state;
         }
     }
-    void VisualizeParticipant()
-    {
-        for (int i = 0; i < ParticipantAreaRenderers.Length; i++)
-        {
-            ParticipantAreaRenderers[i].material = ParticipantReadyMat;
-        }
-    }
-
-    void VisualizeResetParticipant()
-    {
-        for (int i = 0; i < ParticipantAreaRenderers.Length; i++)
-        {
-            ParticipantAreaRenderers[i].material = DefaultMat;
-        }
-    }
-
     void UpdateExperimenterArea(bool state)
     {
         if (ExperimenterReadyViz != state)
         {
+            var TargetMat = DefaultMat;
             if (state)
             {
-                VisualizeExperimenter();
+                TargetMat = ExperimenterReadyMat;
             }
-            else
+            for (int i = 0; i < ExperimenterAreaRenderers.Length; i++)
             {
-                VisualizeResetExperimenter();
+                ExperimenterAreaRenderers[i].material = TargetMat;
             }
             ExperimenterReadyViz = state;
-        }
-    }
-    void VisualizeExperimenter()
-    {
-        for (int i = 0; i < ExperimenterAreaRenderers.Length; i++)
-        {
-            ExperimenterAreaRenderers[i].material = ExperimenterReadyMat;
-        }
-    }
-
-    void VisualizeResetExperimenter()
-    {
-        for (int i = 0; i < ExperimenterAreaRenderers.Length; i++)
-        {
-            ExperimenterAreaRenderers[i].material = DefaultMat;
         }
     }
 }

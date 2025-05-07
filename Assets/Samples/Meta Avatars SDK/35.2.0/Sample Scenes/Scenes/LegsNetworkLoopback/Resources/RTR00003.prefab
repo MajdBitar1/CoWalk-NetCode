@@ -1675,10 +1675,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a0b67dfce78880e40b4f28cd47fc4766, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _animationCyclePeriod: 1
+  _velocity: {x: 0, y: 0, z: 0}
+  armswing: {x: 0, y: 0, z: 0}
+  _animationCyclePeriod: 3
   _entity: {fileID: 0}
   _movementThreshold: 0.01
-  _enableCrouching: 1
+  _enableCrouching: 0
   _crouchStartThreshold: -0.3
   _crouchRange: 0.3
   _isSitting: 0

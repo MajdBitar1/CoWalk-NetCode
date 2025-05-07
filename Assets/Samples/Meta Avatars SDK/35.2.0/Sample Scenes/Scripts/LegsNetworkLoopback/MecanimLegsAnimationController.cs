@@ -81,8 +81,10 @@ namespace Oculus.Avatar2
         private const float SittingTurnAngleRange = SittingTurnMaxAngle - SittingTurnMinAngle;
 
         // Velocity vector of the avatar
-        private Vector3 _velocity = Vector3.zero;
+        public Vector3 _velocity = Vector3.zero;
         private Vector3 _acceleration = Vector3.zero;
+
+        public Vector3 armswing = Vector3.zero;
 
         private Vector3 _previousHeadPosition = Vector3.zero;
 
@@ -300,9 +302,12 @@ namespace Oculus.Avatar2
             }
 
             Vector3 headPosition = headPositionVector.Value;
+            Debug.Log($"[Legs] Head Position: {headPosition}");
 
             // Calculate the delta between the current position of the head, and it's position at the last update.
-            var deltaHeadPosition = headPosition - _previousHeadPosition;
+            //var deltaHeadPosition = headPosition - _previousHeadPosition;
+            var deltaHeadPosition = armswing;
+            Debug.Log("[LEGS] DELTA FROM ARMSWING" + deltaHeadPosition);
             deltaHeadPosition = Vector3.ProjectOnPlane(deltaHeadPosition, Vector3.up);
 
             // Use damping to gradually accelerate the walk animation; helps to reduce
@@ -346,7 +351,7 @@ namespace Oculus.Avatar2
                 _crouchTimer -= Time.deltaTime;
             }
 
-            _movingForward = false;
+            _movingForward = false; //TODO
             _movingBackward = false;
             _movingLeft = false;
             _movingRight = false;
@@ -596,6 +601,8 @@ namespace Oculus.Avatar2
             {
                 _turnInPlaceLayerIndex = _animator.GetLayerIndex(_turnInPlaceLayerName);
             }
+
+
         }
 
         // When the animation controller initialized, it assumes the user is in a standing position, and it uses

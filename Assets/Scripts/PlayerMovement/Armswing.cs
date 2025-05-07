@@ -39,7 +39,7 @@ public class Armswing : MonoBehaviour
     [Header("Smoothing Movement")]
     public float MovementAmplifier = 1;
     [SerializeField] int BufferWindow = 30;
-    private Queue<float> SpeedStack = new Queue<float>();
+    private Queue<float> SpeedQueue = new Queue<float>();
 
     /// <summary>
     /// Gets a descendant GameObject with a specific name
@@ -70,7 +70,7 @@ public class Armswing : MonoBehaviour
         //Initialize the stack with zeroes
         for (int i = 0; i < BufferWindow; i++)
         {
-            SpeedStack.Enqueue(0);
+            SpeedQueue.Enqueue(0);
         }
     }
 
@@ -83,7 +83,8 @@ public class Armswing : MonoBehaviour
     private void updateplayermovement()
     {
         FinalPlayerSpeed = SmoothMovement(ComputeMovement());
-        //Debug.Log($"Final Player Speed: {FinalPlayerSpeed}");
+        //Debug.Log($"[ARM] Hip Direction: {HipDirection}");
+        //Debug.Log($"[ARM] Head Direction: {HeadDirection}");
     }
 
 
@@ -102,7 +103,7 @@ public class Armswing : MonoBehaviour
     {
         if (GameManager.LocalPlayerObject != null)
         {
-            GameObject hipsobj = GetNamedChild(GameManager.LocalPlayerObject, "Joint Chest"); //"RTRig_SpineStart"
+            GameObject hipsobj = GetNamedChild(GameManager.LocalPlayerObject, "RTRig_SpineStart"); //"RTRig_SpineStart"
             if (hipsobj != null)
             {
                 _Hips = hipsobj;
@@ -175,12 +176,12 @@ public class Armswing : MonoBehaviour
     }
     private float SmoothMovement(float currentspeed)
     {
-        if (SpeedStack.Count >= BufferWindow)
+        if (SpeedQueue.Count >= BufferWindow)
         {
-            SpeedStack.Dequeue();
+            SpeedQueue.Dequeue();
         }
-        SpeedStack.Enqueue(currentspeed);
-        float averagespeed = SpeedStack.Sum() / BufferWindow;
+        SpeedQueue.Enqueue(currentspeed);
+        float averagespeed = SpeedQueue.Sum() / BufferWindow;
         return averagespeed;
     }
     public PlayerMovementData GetSpeedFromSwings()

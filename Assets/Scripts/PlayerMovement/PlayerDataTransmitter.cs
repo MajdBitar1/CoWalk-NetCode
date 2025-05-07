@@ -27,32 +27,32 @@ public class PlayerDataTransmitter : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        m_playerMovementData = m_playerMovementHandler.GetMovementData();
-        //m_playerMovementData.CycleDuration = m_armRhythm.GetCycleDuration();
-        //m_armRhythm.SetCurrentSpeed(m_playerMovementData.Speed);
+        //m_playerMovementData = m_playerMovementHandler.GetMovementData();
+        ////m_playerMovementData.CycleDuration = m_armRhythm.GetCycleDuration();
+        ////m_armRhythm.SetCurrentSpeed(m_playerMovementData.Speed);
 
-        CurrentSpeed = m_playerMovementData.Speed;
-        Frequency = m_playerMovementData.CycleDuration;
-        Direction = m_playerMovementData.Direction;
+        //CurrentSpeed = m_playerMovementData.Speed;
+        //Frequency = m_playerMovementData.CycleDuration;
+        //Direction = m_playerMovementData.Direction;
     }
     private void LateUpdate()
     {
-        if (m_playerNetworkInfo == null)
-        {
-            m_playerNetworkInfo = GameManager.LocalPlayerObject.GetComponent<PlayerNetworkInfo>();
-        }
-        else
-        {
-            m_playerNetworkInfo.SetLocalPlayerDataRpc(Direction, CurrentSpeed, Frequency);
-        }
+        //if (m_playerNetworkInfo == null)
+        //{
+        //    m_playerNetworkInfo = GameManager.LocalPlayerObject.GetComponent<PlayerNetworkInfo>();
+        //}
+        //else
+        //{
+        //    m_playerNetworkInfo.SetLocalPlayerDataRpc(Direction, CurrentSpeed, Frequency);
+        //}
     }
 
     private void FixedUpdate()
     {
-        if (GameManager.LocalPlayerObject == null)
-        {
-            return;
-        }
+        //if (GameManager.LocalPlayerObject == null)
+        //{
+        //    return;
+        //}
 
         //GameManager.LocalPlayerObject.GetComponent<PlayerNetworkInfo>().SetLocalPlayerData(m_playerMovementData);
     }

@@ -8,6 +8,21 @@ TagManager:
   - QDSUIIcon
   - QDSUIBackplateGradient
   - QDSUIToggleButton
+  - QDSUITextInputField
+  - QDSUISharedThemeColor
+  - QDSUISecondaryButton
+  - QDSUIBorderlessButton
+  - QDSUIPrimaryButton
+  - QDSUIDestructiveButton
+  - QDSUITooltip
+  - QDSUISection
+  - QDSUIToggleCheckboxRadio
+  - QDSUIToggleSwitch
+  - QDSUIAccentColor
+  - QDSUITextSecondaryColor
+  - QDSUIToggleBorderlessButton
+  - QDSUITextInvertedColor
+  - QDSUITextSecondaryInvertedColor
   layers:
   - Default
   - TransparentFX
@@ -40,7 +55,7 @@ TagManager:
   - 
   - 
   - 
-  - OVROverlayCanvas Rendering
+  - 
   m_SortingLayers:
   - name: Default
     uniqueID: 0
