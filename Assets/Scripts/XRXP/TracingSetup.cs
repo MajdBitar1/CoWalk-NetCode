@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class TracingSetup : MonoBehaviour
 {
+    [SerializeField] FeedbackManager feedbackManager;
     private DataToTrace TracingData;
     private PlayerNetworkInfo ExperimenterInfo, ParticipantInfo;
     bool isRecording = false;
@@ -59,7 +60,7 @@ public class TracingSetup : MonoBehaviour
 
     private void UpdateTracingData()
     {
-        TracingData.SetStateData(GameManager.Instance.AuraState.Value, GameManager.Instance.AuraState.Value);
+        TracingData.SetStateData(feedbackManager.AuraState.Value, feedbackManager.AuraState.Value);
 
         TracingData.SetIndividualData(
             ExperimenterInfo.Speed.Value,

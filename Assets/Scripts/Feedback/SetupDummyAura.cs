@@ -10,11 +10,14 @@ public class SetupDummyAura : NetworkBehaviour
 
     private Collider m_collider;
     private AuraManager m_auraManager;
-    private MeshRenderer m_meshRenderer;
+    private SkinnedMeshRenderer m_meshRenderer;
 
     private Transform m_target;
 
+    private Transform InitialLocaiton;
+
     private NetworkVariable<bool> netIsActive = new NetworkVariable<bool>();
+    private bool Resetting = false;
 
     public void OnNetworkSpawn()
     {
@@ -24,8 +27,9 @@ public class SetupDummyAura : NetworkBehaviour
 
     void Start()
     {
+        InitialLocaiton = transform;
         m_collider = GetComponent<Collider>();
-        m_meshRenderer = GetComponent<MeshRenderer>();
+        m_meshRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
         m_auraManager = GetComponentInChildren<AuraManager>();
         m_auraManager.AuraState = false;
     }
@@ -34,6 +38,14 @@ public class SetupDummyAura : NetworkBehaviour
     {
         if (IsServer)
         {
+            if (Resetting)
+            {
+                ReturnToCenter();
+            }
+            if (!netIsActive.Value)
+            {
+                return;
+            }
             ServerMoveBetweenEndPoints();
         }
     }
@@ -61,37 +73,59 @@ public class SetupDummyAura : NetworkBehaviour
     {
         netIsActive.Value = false;
         UpdateClientVisualsClientRpc(new Color(1f, 0f, 0f, 1f));
+        Resetting = true;
     }
-
 
     [ClientRpc]
     void UpdateClientVisualsClientRpc(Color newColor)
     {
-        m_meshRenderer.material.color = newColor;
+        m_meshRenderer.materials[1].color = newColor;
     }
 
     void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.layer == 6)
         {
-            m_auraManager.SetOtherPlayer(GameManager.LocalPlayerObject);
+            if (m_auraManager.SetOtherPlayer(GameManager.LocalPlayerObject) < 0)
+            {
+                Debug.LogError("[SetupDummyAura] Other Player is null");
+                return;
+            }
             m_auraManager.AuraState = true;
             ActivateServerRpc();
         }
     }
 
+    void ReturnToCenter()
+    {
+        m_target = InitialLocaiton;
+        if (Vector3.Distance(transform.position, m_target.position) < 0.01f)
+        {
+            transform.position = InitialLocaiton.position;
+            transform.rotation = InitialLocaiton.rotation;
+            Resetting = false;
+            return;
+        }
+
+        Vector3 direction = (m_target.position - transform.position).normalized;
+        //transform.rotation = Quaternion.LookRotation(direction) ;
+        //transform.forward = ;
+        transform.forward = Vector3.RotateTowards(transform.forward, -1 * Vector3.Cross(direction, Vector3.up), 2 * Speed * Time.deltaTime, 0.0f);
+        float step = Speed * Time.deltaTime;
+        transform.position = Vector3.MoveTowards(transform.position, m_target.position, step);
+    }
     void ServerMoveBetweenEndPoints()
     {
-        if (!netIsActive.Value)  return;
-
-        Debug.Log("Moving between endpoints");
-
+        // Initial Target
         if (m_target == null)
         {
             m_target = EndPointOne;
         }
 
         Vector3 direction = (m_target.position - transform.position).normalized;
+        //transform.rotation = Quaternion.LookRotation(direction) ;
+        //transform.forward = ;
+        transform.forward = Vector3.RotateTowards(transform.forward, -1 * Vector3.Cross(direction, Vector3.up), 2 * Speed * Time.deltaTime, 0.0f);
         float step = Speed * Time.deltaTime;
         transform.position = Vector3.MoveTowards(transform.position, m_target.position, step);
         

@@ -302,12 +302,10 @@ namespace Oculus.Avatar2
             }
 
             Vector3 headPosition = headPositionVector.Value;
-            Debug.Log($"[Legs] Head Position: {headPosition}");
 
             // Calculate the delta between the current position of the head, and it's position at the last update.
             //var deltaHeadPosition = headPosition - _previousHeadPosition;
             var deltaHeadPosition = armswing;
-            Debug.Log("[LEGS] DELTA FROM ARMSWING" + deltaHeadPosition);
             deltaHeadPosition = Vector3.ProjectOnPlane(deltaHeadPosition, Vector3.up);
 
             // Use damping to gradually accelerate the walk animation; helps to reduce

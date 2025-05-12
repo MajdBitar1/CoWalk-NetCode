@@ -64,7 +64,7 @@ public class Armswing : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        _Hips = null;
+        //_Hips = null;
         InitializeSwinger();
 
         //Initialize the stack with zeroes
@@ -101,22 +101,23 @@ public class Armswing : MonoBehaviour
 
     private void SetupHips()
     {
-        if (GameManager.LocalPlayerObject != null)
-        {
-            GameObject hipsobj = GetNamedChild(GameManager.LocalPlayerObject, "RTRig_SpineStart"); //"RTRig_SpineStart"
-            if (hipsobj != null)
-            {
-                _Hips = hipsobj;
-            }
-            else
-            {
-                Debug.LogError("[ArmSwing] Child 'RTRig_SpineStart' not found in LocalPlayerObject.");
-            }
-        }
-        else
-        {
-            Debug.LogError("[ArmSwing] LocalPlayerObject not found.");
-        }
+        //if (GameManager.LocalPlayerObject != null)
+        //{
+        //    GameObject hipsobj = GetNamedChild(GameManager.LocalPlayerObject, "RTRig_SpineStart"); //"RTRig_SpineStart"
+        //    if (hipsobj != null)
+        //    {
+        //        _Hips = hipsobj;
+        //    }
+        //    else
+        //    {
+        //        Debug.LogError("[ArmSwing] Child 'RTRig_SpineStart' not found in LocalPlayerObject.");
+        //    }
+        //}
+        //else
+        //{
+        //    Debug.LogError("[ArmSwing] LocalPlayerObject not found.");
+        //}
+        return;
     }
 
 
@@ -132,7 +133,7 @@ public class Armswing : MonoBehaviour
         PlayerCurrentPosition = transform.localPosition;
         //Define Direction
         HeadDirection = _Head.gameObject.transform.forward.normalized;
-        HipDirection = _Hips.gameObject.transform.forward.normalized * -1;
+        HipDirection = _Hips.gameObject.transform.forward.normalized;
 
         Vector3 NormalVec = Vector3.Cross(HipDirection, Vector3.up).normalized;
 

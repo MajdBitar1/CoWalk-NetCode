@@ -35,20 +35,21 @@ public class PlayerMovementHandler : MonoBehaviour
             mecanimLegsAnimationController = GameManager.LocalPlayerObject.GetComponentInChildren<MecanimLegsAnimationController>();
             return;
         }
+        SetMovementData(m_armSwing.GetSpeedFromSwings());
 
         if (CheckPlayerInput())
         {
             //if the player has movement enabled
-            SetMovementData(m_armSwing.GetSpeedFromSwings());
             moveplayer();
         }
         else
         {
             mecanimLegsAnimationController.armswing = Vector3.zero;
         }
+        UpdateNetworkInfo();
     }
 
-    private void FixedUpdate()
+    private void UpdateNetworkInfo()
     {
         if (DEBUG)
         {

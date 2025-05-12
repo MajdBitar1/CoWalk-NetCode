@@ -31,11 +31,11 @@ TagManager:
   - Water
   - UI
   - Player
+  - HiddenMesh
   - 
   - 
-  - 
-  - 
-  - 
+  - Character
+  - MirroredCharacter
   - 
   - 
   - 

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Unity.Netcode;
 
 [RequireComponent(typeof(MeshRenderer))]
 public class AuraManager : MonoBehaviour
@@ -19,7 +20,11 @@ public class AuraManager : MonoBehaviour
     [Header("Debug")]
     [SerializeField] GameObject OtherPlayer;
     public bool AuraState = true;
+    public bool activateOnLocalPlayer = false;
     public bool AuraBroken = false;
+
+    private bool attachedToLocalPlayer = false;
+
     [SerializeField] bool inView = false;
 
     void Start()
@@ -27,18 +32,31 @@ public class AuraManager : MonoBehaviour
         m_meshRenderer = GetComponent<MeshRenderer>();
         m_material = m_meshRenderer.sharedMaterial;
         m_meshRenderer.enabled = AuraState;
+        if (GetComponentInParent<NetworkObject>() != null)
+        {
+            if (GetComponentInParent<NetworkObject>().IsOwner)
+            {
+                attachedToLocalPlayer = true;
+            }
+        }
     }
 
     private void OnApplicationQuit()
     {
         gameObject.transform.localScale = new Vector3(10, 10, 10);
-        m_material.SetFloat("_Size", 0.04f);
+        //m_material.SetFloat("_Size", 0.04f);
         m_material.SetColor("_WaveColor", new Color(0.65f, 0.65f, 0.65f, 0.5f));
     }
 
-    public void SetOtherPlayer(GameObject player)
+    public int SetOtherPlayer(GameObject player)
     {
+        if (player == null)
+        {
+            Debug.LogError("[AuraManager] Other Player is null");
+            return -1;
+        }
         OtherPlayer = player;
+        return 0;
     }
 
     private bool ObjectInCameraView(GameObject obj)
@@ -49,24 +67,28 @@ public class AuraManager : MonoBehaviour
     }
     private void Update()
     {
-        if (OtherPlayer != null)
+        if (!AuraState)
         {
-            float distance = Vector3.Distance(gameObject.transform.position, OtherPlayer.transform.position);
-            Aura(AuraState, distance);
+            m_meshRenderer.enabled = false;
+            return;
+        }
+        if (activateOnLocalPlayer)
+        {
+            if (!attachedToLocalPlayer)
+            {
+                m_meshRenderer.enabled = false;
+                return;
+            }
+            OtherPlayer = GameManager.RemotePlayerObject;
         }
         else
         {
             OtherPlayer = GameManager.LocalPlayerObject;
-            return;
         }
+        Aura(Vector3.Distance(gameObject.transform.position, OtherPlayer.transform.position));
     }
-    public int Aura(bool AuraState, float distance)
+    public int Aura(float distance)
     {
-        if (!AuraState)
-        {
-            m_meshRenderer.enabled = false;
-            return 0;
-        }
         //Normalize Distance relative to Min and Max Separation Zones, to Get a value which is Negative While in Safe zone, between safe and max the value will be between 0 and 1
         float value = Mathf.Min(1, (distance - SafeSeparationZone) / MaxSeparationZone);
         Debug.Log("[Aura] Value: " + value);
@@ -129,17 +151,5 @@ public class AuraManager : MonoBehaviour
             }
             return -1;
         }
-    }
-
-    public void SetZoneValues(float Safe, float Max, float Cst, float Add)
-    {
-        SafeSeparationZone = Safe;
-        MaxSeparationZone = Max;
-        StartingValue = Cst;
-    }
-
-    public void SetAuraState(bool state)
-    {
-        AuraState = state;
     }
 }

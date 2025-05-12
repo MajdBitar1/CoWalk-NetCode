@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Netcode;
 using UnityEngine;
 
 [RequireComponent(typeof(AudioSource))]
@@ -19,6 +20,11 @@ public class FootstepsAudio : MonoBehaviour
     {
         audioSource = GetComponent<AudioSource>();
         StartingPosition = transform.position;
+
+        if (GetComponentInParent<NetworkObject>().IsOwner)
+        {
+            audioSource.outputAudioMixerGroup = GameManager.Instance.GetAudioMixer().FindMatchingGroups("LocalFootsteps")[0];
+        }
     }
 
     public void PlayFootstepSound()

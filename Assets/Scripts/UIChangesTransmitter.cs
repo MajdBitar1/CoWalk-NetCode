@@ -10,6 +10,7 @@ public class UIChangesTransmitter : MonoBehaviour
     [SerializeField] Toggle Aura;
     [SerializeField] Toggle Footsteps;
     [SerializeField] Toggle Recording;
+    [SerializeField] Toggle SelfAura;
 
     [Header("Local Stats")]
     [SerializeField] TextMeshProUGUI LocalSpeed;
@@ -24,29 +25,31 @@ public class UIChangesTransmitter : MonoBehaviour
     [SerializeField] TextMeshProUGUI GroupAngleDifference;
 
     private PlayerNetworkInfo m_localinfo, m_remoteinfo;
-    private bool aurastate, footstepsstate, recordingstate;
+
+    [SerializeField] FeedbackManager feedbackManager;
+
+    private void Start()
+    {
+        feedbackManager = FindAnyObjectByType<FeedbackManager>();
+    }
     public void OnToggleClick()
     {
-        aurastate = Aura.isOn;
-        footstepsstate = Footsteps.isOn;
-        recordingstate = Recording.isOn;
-        int result = GameManager.Instance.TryUpdateConditions(aurastate, footstepsstate, recordingstate);
+        int result = feedbackManager.TryUpdateConditions(Aura.isOn, Footsteps.isOn, Recording.isOn);
         if (result < 0)
         {
             resetAll();
             Debug.LogError("[UIChangesTransmitter] Error updating conditions");
             return;
         }
+        feedbackManager.UpdateSelfAuraServerRpc(SelfAura.isOn);
     }
 
     private void resetAll()
     {
-        aurastate = false;
-        footstepsstate = false;
-        recordingstate = false;
         Aura.isOn = false;
         Footsteps.isOn = false;
         Recording.isOn = false;
+        SelfAura.isOn = false;
     }
 
     private void Update()

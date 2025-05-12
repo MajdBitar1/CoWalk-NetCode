@@ -2,6 +2,7 @@
   "dependencies": {
     "com.meta.xr.sdk.all": "76.0.0",
     "com.meta.xr.sdk.avatars": "35.2.0",
+    "com.meta.xr.sdk.movement": "https://github.com/oculus-samples/Unity-Movement.git",
     "com.unity.collab-proxy": "2.7.1",
     "com.unity.feature.development": "1.0.1",
     "com.unity.netcode.gameobjects": "1.12.2",

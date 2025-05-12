@@ -24,39 +24,6 @@ public class PlayerDataTransmitter : MonoBehaviour
         m_playerMovementData = new PlayerMovementData(transform.position, Vector3.zero, 0, 0);
     }
 
-    // Update is called once per frame
-    void Update()
-    {
-        //m_playerMovementData = m_playerMovementHandler.GetMovementData();
-        ////m_playerMovementData.CycleDuration = m_armRhythm.GetCycleDuration();
-        ////m_armRhythm.SetCurrentSpeed(m_playerMovementData.Speed);
-
-        //CurrentSpeed = m_playerMovementData.Speed;
-        //Frequency = m_playerMovementData.CycleDuration;
-        //Direction = m_playerMovementData.Direction;
-    }
-    private void LateUpdate()
-    {
-        //if (m_playerNetworkInfo == null)
-        //{
-        //    m_playerNetworkInfo = GameManager.LocalPlayerObject.GetComponent<PlayerNetworkInfo>();
-        //}
-        //else
-        //{
-        //    m_playerNetworkInfo.SetLocalPlayerDataRpc(Direction, CurrentSpeed, Frequency);
-        //}
-    }
-
-    private void FixedUpdate()
-    {
-        //if (GameManager.LocalPlayerObject == null)
-        //{
-        //    return;
-        //}
-
-        //GameManager.LocalPlayerObject.GetComponent<PlayerNetworkInfo>().SetLocalPlayerData(m_playerMovementData);
-    }
-
     public PlayerMovementData GetPlayerData()
     {
         return m_playerMovementData;
