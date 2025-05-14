@@ -24,12 +24,14 @@ public class AuraManager : MonoBehaviour
     private bool attachedToLocalPlayer = false;
 
     [SerializeField] bool inView = false;
+    public bool isActive = false;
 
     void Start()
     {
         m_meshRenderer = GetComponent<MeshRenderer>();
         m_material = m_meshRenderer.sharedMaterial;
         m_meshRenderer.enabled = false;
+        isActive = false;
         if (GetComponentInParent<NetworkObject>() != null)
         {
             if (GetComponentInParent<NetworkObject>().IsOwner)
@@ -65,7 +67,7 @@ public class AuraManager : MonoBehaviour
     }
     private void Update()
     {
-        if (attachedToLocalPlayer)
+        if (attachedToLocalPlayer || !isActive)
         {
             return;
         }

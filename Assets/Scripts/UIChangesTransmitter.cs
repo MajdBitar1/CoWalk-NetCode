@@ -8,9 +8,10 @@ public class UIChangesTransmitter : MonoBehaviour
 {
     [Header("Toggles")]
     [SerializeField] Toggle Aura;
-    [SerializeField] Toggle Footsteps;
+    [SerializeField] Toggle BlinkingLight;
+    [SerializeField] Toggle GuidingArrow;
+    [SerializeField] Toggle PPGrayEffect;
     [SerializeField] Toggle Recording;
-    [SerializeField] Toggle SelfAura;
 
     [Header("Local Stats")]
     [SerializeField] TextMeshProUGUI LocalSpeed;
@@ -32,24 +33,49 @@ public class UIChangesTransmitter : MonoBehaviour
     {
         feedbackManager = FindAnyObjectByType<FeedbackManager>();
     }
-    public void OnToggleClick()
+    public void OnToggleAura()
     {
-        int result = feedbackManager.TryUpdateConditions(Aura.isOn, Footsteps.isOn, Recording.isOn);
-        if (result < 0)
+        if (!Aura.isOn)
         {
-            resetAll();
-            Debug.LogError("[UIChangesTransmitter] Error updating conditions");
-            return;
+            feedbackManager.UpdateExperimentStateServerRpc(0);
         }
-        feedbackManager.UpdateSelfAuraServerRpc(SelfAura.isOn);
+        feedbackManager.UpdateExperimentStateServerRpc(1);
+    }
+    public void OnToggleBlinking()
+    {
+        if (!BlinkingLight.isOn)
+        {
+            feedbackManager.UpdateExperimentStateServerRpc(0);
+        }
+        feedbackManager.UpdateExperimentStateServerRpc(2);
+    }
+    public void OnToggleArrow()
+    {
+        if (!GuidingArrow.isOn)
+        {
+            feedbackManager.UpdateExperimentStateServerRpc(0);
+        }
+        feedbackManager.UpdateExperimentStateServerRpc(3);
+    }
+    public void OnToggleGrayEffect()
+    {
+        if (!PPGrayEffect.isOn)
+        {
+            feedbackManager.UpdateExperimentStateServerRpc(0);
+        }
+        feedbackManager.UpdateExperimentStateServerRpc(4);
+    }
+    public void OnToggleTracing()
+    {
+        //feedbackManager.UpdateExperimentStateServerRpc(1);
     }
 
     private void resetAll()
     {
         Aura.isOn = false;
-        Footsteps.isOn = false;
-        Recording.isOn = false;
-        SelfAura.isOn = false;
+        BlinkingLight.isOn = false;
+        GuidingArrow.isOn = false;
+        PPGrayEffect.isOn = false;
     }
 
     private void Update()

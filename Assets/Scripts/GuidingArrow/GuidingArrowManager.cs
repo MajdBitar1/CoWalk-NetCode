@@ -38,4 +38,8 @@ public class GuidingArrowManager : MonoBehaviour
             Arrow.SetActive(false);
         }
     }
+    public void SetOtherPlayer(GameObject player)
+    {
+        OtherPlayer = player;
+    }
 }

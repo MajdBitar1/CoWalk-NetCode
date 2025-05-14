@@ -72,6 +72,7 @@ public class SetupDummyAura : NetworkBehaviour
     public void DeactivateServerRpc()
     {
         netIsActive.Value = false;
+        m_auraManager.enabled = false;
         UpdateClientVisualsClientRpc(new Color(1f, 0f, 0f, 1f));
         Resetting = true;
     }
@@ -92,6 +93,7 @@ public class SetupDummyAura : NetworkBehaviour
                 return;
             }
             m_auraManager.enabled = true;
+            m_auraManager.isActive = true;
             ActivateServerRpc();
         }
     }

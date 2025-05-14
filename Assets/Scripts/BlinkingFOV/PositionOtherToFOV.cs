@@ -61,4 +61,9 @@ public class PositionOtherToFOV : MonoBehaviour
             indicator.SetActive(false);
         }
     }
+
+    public void SetOtherPlayer(GameObject player)
+    {
+        OtherPlayer = player;
+    }
 }

@@ -33,33 +33,13 @@ public class Armswing : MonoBehaviour
     [SerializeField] float friction = 1f;
     [SerializeField] float MinimumPlayerSpeedThreshold = 0.2f;
     [SerializeField] float MaximumPlayerSpeedThreshold = 100f;
-    [SerializeField] float DifferenceHeadandDirection = 0.6f;
+    //[SerializeField] float DifferenceHeadandDirection = 0.6f;
     //[SerializeField] float RotationDetectionThreshold = 0.98f;
 
     [Header("Smoothing Movement")]
     public float MovementAmplifier = 1;
     [SerializeField] int BufferWindow = 30;
     private Queue<float> SpeedQueue = new Queue<float>();
-
-    /// <summary>
-    /// Gets a descendant GameObject with a specific name
-    /// </summary>
-    /// <param name="go">The parent object that is searched for a named child.</param>
-    /// <param name="name">Name of child to be found.</param>
-    /// <returns>The returned child GameObject or null if no child is found.</returns>
-    private GameObject GetNamedChild(GameObject go, string name)
-    {
-        List<Transform> k_Transforms = new List<Transform>();
-        k_Transforms.Clear();
-        go.GetComponentsInChildren(k_Transforms);
-        var foundObject = k_Transforms.Find(currentTransform => currentTransform.name == name);
-        k_Transforms.Clear();
-
-        if (foundObject != null)
-            return foundObject.gameObject;
-
-        return null;
-    }
 
     // Start is called before the first frame update
     void Start()
@@ -83,8 +63,6 @@ public class Armswing : MonoBehaviour
     private void updateplayermovement()
     {
         FinalPlayerSpeed = SmoothMovement(ComputeMovement());
-        //Debug.Log($"[ARM] Hip Direction: {HipDirection}");
-        //Debug.Log($"[ARM] Head Direction: {HeadDirection}");
     }
 
 
@@ -99,33 +77,11 @@ public class Armswing : MonoBehaviour
         playerprevspeed = 0;
     }
 
-    private void SetupHips()
-    {
-        //if (GameManager.LocalPlayerObject != null)
-        //{
-        //    GameObject hipsobj = GetNamedChild(GameManager.LocalPlayerObject, "RTRig_SpineStart"); //"RTRig_SpineStart"
-        //    if (hipsobj != null)
-        //    {
-        //        _Hips = hipsobj;
-        //    }
-        //    else
-        //    {
-        //        Debug.LogError("[ArmSwing] Child 'RTRig_SpineStart' not found in LocalPlayerObject.");
-        //    }
-        //}
-        //else
-        //{
-        //    Debug.LogError("[ArmSwing] LocalPlayerObject not found.");
-        //}
-        return;
-    }
-
 
     private float ComputeMovement()
     {
         if (_Hips == null)
         {
-            SetupHips();
             _playermovementdata = new PlayerMovementData(transform.position, HipDirection, 0, 1);
             return 0;
         }
@@ -147,11 +103,11 @@ public class Armswing : MonoBehaviour
         playerspeed = playerprevspeed * (0.9f - friction * playerprevspeed) + totalmovement;
         float misalignment = Vector3.Dot(HipDirection, HeadDirection);
 
-        if (misalignment < DifferenceHeadandDirection)
-        {
-            Debug.Log("[ArmSwing] Head and Hip MisAlignment");
-            //playerspeed = playerspeed * misalignment;
-        }
+        //if (misalignment < DifferenceHeadandDirection)
+        //{
+        //    Debug.Log("[ArmSwing] Head and Hip MisAlignment");
+        //    //playerspeed = playerspeed * misalignment;
+        //}
 
         //Reduce Speed For these conditions
         if (playerspeed < MinimumPlayerSpeedThreshold)

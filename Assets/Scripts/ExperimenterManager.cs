@@ -40,7 +40,7 @@ public class ExperimenterManager : MonoBehaviour
                 statsMenu.gameObject.transform.position = GameManager.LocalPlayerObject.gameObject.transform.position + Camera.main.transform.forward.normalized * 2 + new Vector3(0, 0.8f, 0);
                 Vector3 InfrontOfPlayer = Vector3.Cross(Camera.main.transform.forward.normalized, Camera.main.transform.up.normalized).normalized;
                 toggleMenu.gameObject.transform.forward = InfrontOfPlayer;
-                toggleMenu.gameObject.transform.position = GameManager.LocalPlayerObject.gameObject.transform.position + InfrontOfPlayer * 2 + new Vector3(0, 0.8f, 0);
+                toggleMenu.gameObject.transform.position = GameManager.LocalPlayerObject.gameObject.transform.position + InfrontOfPlayer * 1.25f + new Vector3(0, 0.8f, 0);
                 //Show all
                 LeftHandRay.SetActive(true);
                 RightHandRay.SetActive(true);

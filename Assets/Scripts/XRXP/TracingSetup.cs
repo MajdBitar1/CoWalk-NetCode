@@ -60,7 +60,7 @@ public class TracingSetup : MonoBehaviour
 
     private void UpdateTracingData()
     {
-        TracingData.SetStateData(feedbackManager.AuraState.Value, feedbackManager.AuraState.Value);
+        //TracingData.SetStateData(feedbackManager.AuraState.Value, feedbackManager.AuraState.Value);
 
         TracingData.SetIndividualData(
             ExperimenterInfo.Speed.Value,
