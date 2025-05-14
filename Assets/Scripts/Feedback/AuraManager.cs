@@ -69,6 +69,7 @@ public class AuraManager : MonoBehaviour
     {
         if (attachedToLocalPlayer || !isActive)
         {
+            m_meshRenderer.enabled = false;
             return;
         }
         if (OtherPlayer == null)

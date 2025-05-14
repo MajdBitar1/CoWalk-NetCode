@@ -2,11 +2,10 @@ using System.Collections;
 using System.Collections.Generic;
 using Oculus.Interaction.UnityCanvas;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PositionOtherToFOV : MonoBehaviour
 {
-
-
     [Header("References")]
     [SerializeField] Camera vrCamera;
     [SerializeField] RectTransform canvasRect;
@@ -19,11 +18,17 @@ public class PositionOtherToFOV : MonoBehaviour
     [SerializeField] float HorizontalOffset = 0.3f;
     [SerializeField] float VerticalOffset = -0.1f;
 
+    [SerializeField] Color YellowColor = new Color(1f, 1f, 1f);
+    [SerializeField] Color RedColor = new Color(1f, 0f, 0f);
+    private Material BlinkingMaterial;
+
+
     // Start is called before the first frame update
     void Start()
     {
         vrCamera = Camera.main;
         indicator.SetActive(false);
+        BlinkingMaterial = indicator.GetComponent<Image>().material;
     }
 
     // Update is called once per frame
@@ -47,7 +52,7 @@ public class PositionOtherToFOV : MonoBehaviour
                 //Object is to the Right of the Camera
                 ValueX = 1f - HorizontalOffset;
             }
-
+            ComputerColorFrequency();
             Vector2 anchoredPos = new Vector2(
                 (ValueX - 0.5f) * canvasRect.rect.width,
                 (VerticalOffset) * canvasRect.rect.height
@@ -61,7 +66,20 @@ public class PositionOtherToFOV : MonoBehaviour
             indicator.SetActive(false);
         }
     }
-
+    private void ComputerColorFrequency()
+    {
+        float Distance = Vector3.Distance(vrCamera.transform.position, OtherPlayer.transform.position);
+        float value = Mathf.Min(1, (Distance - 5) / 10);
+        Color color = new Color(1f, 1f, 1f);
+        float period = 2f;
+        if (value > 0)
+        {
+            color = Color.Lerp(YellowColor, RedColor, value);
+            period = Mathf.Lerp(2f, 5f, value);
+        }
+        BlinkingMaterial.SetColor("_Color", color);
+        BlinkingMaterial.SetFloat("_Speed", period);
+    }
     public void SetOtherPlayer(GameObject player)
     {
         OtherPlayer = player;

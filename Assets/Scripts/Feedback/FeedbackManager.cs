@@ -63,7 +63,7 @@ public class FeedbackManager : NetworkBehaviour
         StateDefined.Value = newState;
     }
 
-    private void FixedUpdate()
+    private void LateUpdate()
     {
         if (prevValue != StateDefined.Value)
         {
