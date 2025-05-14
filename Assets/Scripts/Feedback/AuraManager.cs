@@ -19,10 +19,8 @@ public class AuraManager : MonoBehaviour
 
     [Header("Debug")]
     [SerializeField] GameObject OtherPlayer;
-    public bool AuraState = true;
-    public bool activateOnLocalPlayer = false;
-    public bool AuraBroken = false;
 
+    public bool AuraBroken = false;
     private bool attachedToLocalPlayer = false;
 
     [SerializeField] bool inView = false;
@@ -31,7 +29,7 @@ public class AuraManager : MonoBehaviour
     {
         m_meshRenderer = GetComponent<MeshRenderer>();
         m_material = m_meshRenderer.sharedMaterial;
-        m_meshRenderer.enabled = AuraState;
+        m_meshRenderer.enabled = false;
         if (GetComponentInParent<NetworkObject>() != null)
         {
             if (GetComponentInParent<NetworkObject>().IsOwner)
@@ -67,23 +65,14 @@ public class AuraManager : MonoBehaviour
     }
     private void Update()
     {
-        if (!AuraState)
+        if (attachedToLocalPlayer)
         {
-            m_meshRenderer.enabled = false;
             return;
         }
-        if (activateOnLocalPlayer)
-        {
-            if (!attachedToLocalPlayer)
-            {
-                m_meshRenderer.enabled = false;
-                return;
-            }
-            OtherPlayer = GameManager.RemotePlayerObject;
-        }
-        else
+        if (OtherPlayer == null)
         {
             OtherPlayer = GameManager.LocalPlayerObject;
+            return;
         }
         Aura(Vector3.Distance(gameObject.transform.position, OtherPlayer.transform.position));
     }

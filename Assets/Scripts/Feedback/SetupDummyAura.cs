@@ -31,7 +31,7 @@ public class SetupDummyAura : NetworkBehaviour
         m_collider = GetComponent<Collider>();
         m_meshRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
         m_auraManager = GetComponentInChildren<AuraManager>();
-        m_auraManager.AuraState = false;
+        m_auraManager.enabled = false;
     }
 
     void Update()
@@ -91,7 +91,7 @@ public class SetupDummyAura : NetworkBehaviour
                 Debug.LogError("[SetupDummyAura] Other Player is null");
                 return;
             }
-            m_auraManager.AuraState = true;
+            m_auraManager.enabled = true;
             ActivateServerRpc();
         }
     }

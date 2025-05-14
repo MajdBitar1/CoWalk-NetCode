@@ -10,6 +10,7 @@ public class FeedbackManager : NetworkBehaviour
     public NetworkVariable<bool> RhythmState = new NetworkVariable<bool>();
     public NetworkVariable<bool> TracingState = new NetworkVariable<bool>();
     public NetworkVariable<bool> ActivateOnLocalPlayer = new NetworkVariable<bool>();
+    public NetworkVariable<int> StateDefined = new NetworkVariable<int>();
 
     [SerializeField] TracingSetup Tracer;
 
@@ -131,8 +132,7 @@ public class FeedbackManager : NetworkBehaviour
         {
             if (auraManager != null)
             {
-                auraManager.AuraState = AuraState.Value;
-                auraManager.activateOnLocalPlayer = ActivateOnLocalPlayer.Value;
+                return;
             }
             else
             {
