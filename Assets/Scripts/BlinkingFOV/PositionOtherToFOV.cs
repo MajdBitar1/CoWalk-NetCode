@@ -30,7 +30,12 @@ public class PositionOtherToFOV : MonoBehaviour
         indicator.SetActive(false);
         BlinkingMaterial = indicator.GetComponent<Image>().material;
     }
-
+    private bool ObjectInCameraView(GameObject obj)
+    {
+        Vector3 screenPoint = Camera.main.WorldToViewportPoint(obj.transform.position);
+        bool onScreen = screenPoint.z > 0 && screenPoint.x > 0 && screenPoint.x < 1 && screenPoint.y > 0 && screenPoint.y < 1;
+        return onScreen;
+    }
     // Update is called once per frame
     void Update()
     {
@@ -39,9 +44,7 @@ public class PositionOtherToFOV : MonoBehaviour
             return;
         }
 
-        Vector3 viewportPos = Camera.main.WorldToViewportPoint(OtherPlayer.transform.position);
-
-        if (viewportPos.z < 0) //The Object is not in the FOV of the Camera
+        if (!ObjectInCameraView(OtherPlayer)) //The Object is not in the FOV of the Camera
         {
             //Assume the object is to the Left of the Camera
             float ValueX = 0f + HorizontalOffset;
@@ -52,12 +55,11 @@ public class PositionOtherToFOV : MonoBehaviour
                 //Object is to the Right of the Camera
                 ValueX = 1f - HorizontalOffset;
             }
-            ComputerColorFrequency();
+
             Vector2 anchoredPos = new Vector2(
                 (ValueX - 0.5f) * canvasRect.rect.width,
                 (VerticalOffset) * canvasRect.rect.height
             );
-
             indicator.GetComponent<RectTransform>().anchoredPosition = anchoredPos;
             indicator.SetActive(true);
         }
@@ -65,6 +67,11 @@ public class PositionOtherToFOV : MonoBehaviour
         {
             indicator.SetActive(false);
         }
+    }
+
+    private void FixedUpdate()
+    {
+        ComputerColorFrequency();
     }
     private void ComputerColorFrequency()
     {

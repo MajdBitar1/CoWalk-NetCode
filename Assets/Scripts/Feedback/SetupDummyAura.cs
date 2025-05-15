@@ -94,6 +94,7 @@ public class SetupDummyAura : NetworkBehaviour
             }
             m_auraManager.enabled = true;
             m_auraManager.isActive = true;
+            m_auraManager.SetAttachedToLocal(false);
             ActivateServerRpc();
         }
     }

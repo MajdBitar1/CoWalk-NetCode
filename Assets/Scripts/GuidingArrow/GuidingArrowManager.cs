@@ -22,6 +22,12 @@ public class GuidingArrowManager : MonoBehaviour
         BlinkingMaterial = Arrow.GetComponent<MeshRenderer>().sharedMaterial;
     }
 
+    private bool ObjectInCameraView(GameObject obj)
+    {
+        Vector3 screenPoint = Camera.main.WorldToViewportPoint(obj.transform.position);
+        bool onScreen = screenPoint.z > 0 && screenPoint.x > 0 && screenPoint.x < 1 && screenPoint.y > 0 && screenPoint.y < 1;
+        return onScreen;
+    }
     // Update is called once per frame
     void Update()
     {
@@ -30,9 +36,7 @@ public class GuidingArrowManager : MonoBehaviour
             return;
         }
 
-        Vector3 viewportPos = Camera.main.WorldToViewportPoint(OtherPlayer.transform.position);
-
-        if (viewportPos.z < 0) //The Object is not in the FOV of the Camera
+        if (!ObjectInCameraView(OtherPlayer) ) //The Object is not in the FOV of the Camera
         {
             Arrow.transform.LookAt(OtherPlayer.transform.position); //Make the Arrow look at the Camera
             ComputerColorFrequency();
