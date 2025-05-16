@@ -7,20 +7,29 @@ using UnityEngine.UI;
 public class PositionOtherToFOV : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] Camera vrCamera;
     [SerializeField] RectTransform canvasRect;
     [SerializeField] GameObject indicator;
 
-    [Header("Users to Track")]
-    [SerializeField] GameObject OtherPlayer;
+    [Header("Constants To Tune")]
+    [SerializeField] float SafeSeparationZone = 5;
+    [SerializeField] float MaxSeparationZone = 10;
+
+    [Header("Colors of the Light")]
+    [SerializeField] Color InitialColor = Color.white;
+    [SerializeField] Color MidColor;
+    [SerializeField] Color EndColor;
+
+    [Header("Blinking Properties")]
+    [SerializeField] float MinimumBlinkingSpeed = 4f;
 
     [Header("Indicator Settings")]
     [SerializeField] float HorizontalOffset = 0.3f;
     [SerializeField] float VerticalOffset = -0.1f;
 
-    [SerializeField] Color YellowColor = new Color(1f, 1f, 1f);
-    [SerializeField] Color RedColor = new Color(1f, 0f, 0f);
+    private Camera vrCamera;
+    private GameObject OtherPlayer;
     private Material BlinkingMaterial;
+    private float customTime;
 
 
     // Start is called before the first frame update
@@ -29,6 +38,13 @@ public class PositionOtherToFOV : MonoBehaviour
         vrCamera = Camera.main;
         indicator.SetActive(false);
         BlinkingMaterial = indicator.GetComponent<Image>().material;
+        BlinkingMaterial.SetColor("_Color", InitialColor);
+    }
+    private void OnApplicationQuit()
+    {
+        BlinkingMaterial.SetColor("_Color", InitialColor);
+        BlinkingMaterial.SetFloat("_Speed", MinimumBlinkingSpeed);
+        BlinkingMaterial.SetFloat("_CustomTime", 0f);
     }
     private bool ObjectInCameraView(GameObject obj)
     {
@@ -39,6 +55,9 @@ public class PositionOtherToFOV : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        customTime += Time.unscaledDeltaTime;
+        BlinkingMaterial.SetFloat("_CustomTime", customTime);
+
         if (OtherPlayer == null)
         {
             return;
@@ -76,16 +95,16 @@ public class PositionOtherToFOV : MonoBehaviour
     private void ComputerColorFrequency()
     {
         float Distance = Vector3.Distance(vrCamera.transform.position, OtherPlayer.transform.position);
-        float value = Mathf.Min(1, (Distance - 5) / 10);
-        Color color = new Color(1f, 1f, 1f);
-        float period = 2f;
+        float value = Mathf.Min(1, (Distance - SafeSeparationZone) / MaxSeparationZone);
+        Color color = InitialColor;
+        float frequency = MinimumBlinkingSpeed;
         if (value > 0)
         {
-            color = Color.Lerp(YellowColor, RedColor, value);
-            period = Mathf.Lerp(2f, 5f, value);
+            color = Color.Lerp(MidColor, EndColor, value);
+            frequency = Mathf.Lerp(frequency, frequency*2, value);
         }
         BlinkingMaterial.SetColor("_Color", color);
-        BlinkingMaterial.SetFloat("_Speed", period);
+        BlinkingMaterial.SetFloat("_Speed", frequency*2);
     }
     public void SetOtherPlayer(GameObject player)
     {

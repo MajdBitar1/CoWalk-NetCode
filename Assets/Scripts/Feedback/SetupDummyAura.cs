@@ -14,10 +14,10 @@ public class SetupDummyAura : NetworkBehaviour
 
     private Transform m_target;
 
-    private Transform InitialLocaiton;
+    //private Transform InitialLocaiton;
 
     private NetworkVariable<bool> netIsActive = new NetworkVariable<bool>();
-    private bool Resetting = false;
+    //private bool Resetting = false;
 
     public void OnNetworkSpawn()
     {
@@ -27,7 +27,7 @@ public class SetupDummyAura : NetworkBehaviour
 
     void Start()
     {
-        InitialLocaiton = transform;
+        //InitialLocaiton = transform;
         m_collider = GetComponent<Collider>();
         m_meshRenderer = GetComponentInChildren<SkinnedMeshRenderer>();
         m_auraManager = GetComponentInChildren<AuraManager>();
@@ -38,10 +38,10 @@ public class SetupDummyAura : NetworkBehaviour
     {
         if (IsServer)
         {
-            if (Resetting)
-            {
-                ReturnToCenter();
-            }
+            //if (Resetting)
+            //{
+            //    ReturnToCenter();
+            //}
             if (!netIsActive.Value)
             {
                 return;
@@ -74,7 +74,7 @@ public class SetupDummyAura : NetworkBehaviour
         netIsActive.Value = false;
         m_auraManager.enabled = false;
         UpdateClientVisualsClientRpc(new Color(1f, 0f, 0f, 1f));
-        Resetting = true;
+        //Resetting = true;
     }
 
     [ClientRpc]
@@ -93,30 +93,31 @@ public class SetupDummyAura : NetworkBehaviour
                 return;
             }
             m_auraManager.enabled = true;
+            m_auraManager.AuraBroken = false;
             m_auraManager.isActive = true;
-            m_auraManager.SetAttachedToLocal(false);
             ActivateServerRpc();
         }
     }
 
-    void ReturnToCenter()
-    {
-        m_target = InitialLocaiton;
-        if (Vector3.Distance(transform.position, m_target.position) < 0.01f)
-        {
-            transform.position = InitialLocaiton.position;
-            transform.rotation = InitialLocaiton.rotation;
-            Resetting = false;
-            return;
-        }
+    //void ReturnToCenter()
+    //{
+    //    m_target = InitialLocaiton;
+    //    if (Vector3.Distance(transform.position, m_target.position) < 0.01f)
+    //    {
+    //        transform.position = InitialLocaiton.position;
+    //        transform.rotation = InitialLocaiton.rotation;
+    //        Resetting = false;
+    //        return;
+    //    }
 
-        Vector3 direction = (m_target.position - transform.position).normalized;
-        //transform.rotation = Quaternion.LookRotation(direction) ;
-        //transform.forward = ;
-        transform.forward = Vector3.RotateTowards(transform.forward, -1 * Vector3.Cross(direction, Vector3.up), 2 * Speed * Time.deltaTime, 0.0f);
-        float step = Speed * Time.deltaTime;
-        transform.position = Vector3.MoveTowards(transform.position, m_target.position, step);
-    }
+    //    Vector3 direction = (m_target.position - transform.position).normalized;
+    //    //transform.rotation = Quaternion.LookRotation(direction) ;
+    //    //transform.forward = ;
+    //    transform.forward = Vector3.RotateTowards(transform.forward, -1 * Vector3.Cross(direction, Vector3.up), 2 * Speed * Time.deltaTime, 0.0f);
+    //    float step = Speed * Time.deltaTime;
+    //    transform.position = Vector3.MoveTowards(transform.position, m_target.position, step);
+    //}
+
     void ServerMoveBetweenEndPoints()
     {
         // Initial Target

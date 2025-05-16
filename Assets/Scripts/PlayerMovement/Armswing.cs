@@ -13,33 +13,29 @@ public class Armswing : MonoBehaviour
     [SerializeField] GameObject _Head;
     [SerializeField] GameObject _Hips;
 
-    private Vector3 prevPosLeft, prevPosRight, prevHipDirection;
-    private Vector3 HipDirection,HeadDirection;
-    private Vector3 PlayerCurrentPosition, PlayerPreviousFramePosition;
-    public PlayerMovementData _playermovementdata;
-
-    [Header("Track These")]
-    public float playerspeed;
-    public float playerprevspeed;
-    public float LeftDistanceMoved = 0;
-    public float RightDistanceMoved = 0;
-
-    [Header("Access These by Other Classes")]
-    private float FinalPlayerSpeed = 0;
-
-
     [Header("Tuning Parameters")]
-    //[SerializeField] float SpeedAmplifier = 100f;
+    [SerializeField] float MovementAmplifier = 1;
     [SerializeField] float friction = 1f;
     [SerializeField] float MinimumPlayerSpeedThreshold = 0.2f;
     [SerializeField] float MaximumPlayerSpeedThreshold = 100f;
+
     //[SerializeField] float DifferenceHeadandDirection = 0.6f;
     //[SerializeField] float RotationDetectionThreshold = 0.98f;
 
     [Header("Smoothing Movement")]
-    public float MovementAmplifier = 1;
     [SerializeField] int BufferWindow = 30;
-    private Queue<float> SpeedQueue = new Queue<float>();
+
+    Vector3 prevPosLeft, prevPosRight, prevHipDirection;
+    Vector3 HipDirection,HeadDirection;
+    Vector3 PlayerCurrentPosition, PlayerPreviousFramePosition;
+
+    float playerspeed;
+    float playerprevspeed;
+    float LeftDistanceMoved = 0;
+    float RightDistanceMoved = 0;
+    float FinalPlayerSpeed = 0;
+
+    Queue<float> SpeedQueue = new Queue<float>();
 
     // Start is called before the first frame update
     void Start()
@@ -59,6 +55,11 @@ public class Armswing : MonoBehaviour
         updateplayermovement();
     }
 
+    public PlayerMovementData GetSpeedFromSwings()
+    {
+        return new PlayerMovementData(transform.position, HipDirection, FinalPlayerSpeed, 1);
+    }
+
 
     private void updateplayermovement()
     {
@@ -66,7 +67,7 @@ public class Armswing : MonoBehaviour
     }
 
 
-    public void InitializeSwinger()
+    private void InitializeSwinger()
     {
         HeadDirection = _Head.gameObject.transform.forward.normalized;
         PlayerPreviousFramePosition = transform.localPosition;
@@ -82,7 +83,6 @@ public class Armswing : MonoBehaviour
     {
         if (_Hips == null)
         {
-            _playermovementdata = new PlayerMovementData(transform.position, HipDirection, 0, 1);
             return 0;
         }
         //Update Position
@@ -141,14 +141,7 @@ public class Armswing : MonoBehaviour
         float averagespeed = SpeedQueue.Sum() / BufferWindow;
         return averagespeed;
     }
-    public PlayerMovementData GetSpeedFromSwings()
-    {   
-        return new PlayerMovementData(transform.position, HipDirection, FinalPlayerSpeed, 1);
-    }
 
-    //TO DO
-    //MAKE THEM ONE FUCITON WITH LEFTHAND OR RIGHTHAND AS INPUT, 
-    //BUT THIS MAY CAUSE SOME PROBLEMS WITH VARIABLES, U CAN PASS A BOOL TO SPECIFY WHICH VARIALBES TO ACCESS IN AN 2D ARRAY.
     private float ComputeLeftHandMovement(Vector3 NormalVec)
     {
         Vector3 CurrentLeftPos = new Vector3(_Lefthand.transform.localPosition.x, 0, _Lefthand.transform.localPosition.z);

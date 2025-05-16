@@ -12,7 +12,7 @@ public class FeedbackManager : NetworkBehaviour
 
     [SerializeField] TracingSetup Tracer;
 
-    [SerializeField] GameObject PostProcessingGrayEffect;
+    //[SerializeField] GameObject PostProcessingGrayEffect;
 
     [SerializeField] GameObject BlinkingLightEffect;
 
@@ -35,7 +35,7 @@ public class FeedbackManager : NetworkBehaviour
         }
         else
         {
-            TracingState.OnValueChanged += ConditionChanged;
+            TracingState.OnValueChanged += TracingStateUpdated;
             StateDefined.OnValueChanged += ExperimentStateChanged;
             DeactivateAllStates();
             prevValue = 0;
@@ -54,7 +54,7 @@ public class FeedbackManager : NetworkBehaviour
     public override void OnNetworkDespawn()
     {
         StateDefined.OnValueChanged -= ExperimentStateChanged;
-        TracingState.OnValueChanged -= ConditionChanged;
+        TracingState.OnValueChanged -= TracingStateUpdated;
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -63,8 +63,18 @@ public class FeedbackManager : NetworkBehaviour
         StateDefined.Value = newState;
     }
 
+    [ServerRpc(RequireOwnership = false)]
+    public void UpdateTracingStateServerRpc(bool tracing)
+    {
+        TracingState.Value = tracing;
+    }
+
     private void LateUpdate()
     {
+        if (OtherPlayer == null)
+        {
+            OtherPlayer = GameManager.RemotePlayerObject;
+        }
         if (prevValue != StateDefined.Value)
         {
             ApplyStateChange();
@@ -76,7 +86,7 @@ public class FeedbackManager : NetworkBehaviour
     {
         if (OtherPlayer == null)
         {
-            OtherPlayer = GameManager.RemotePlayerObject;
+            return;
         }
 
         //Disable all Effects
@@ -91,33 +101,23 @@ public class FeedbackManager : NetworkBehaviour
                 ActivateAura();
                 break;
             case 2:
-                ActivateBlinkingLight();
-                break;
-            case 3:
                 ActivateGuidingArrow();
                 break;
-            case 4:
-                //ActivatePPGray();
-                break;
+            //case 3:
+            //    ActivateBlinkingLight();
+            //    break;
             default:
                 Debug.LogError("[GM] Invalid state: " + StateDefined.Value);
                 break;
         }
     }
 
-    private void ActivatePPGray()
-    {
-        PostProcessingGrayEffect.SetActive(true);
-        PostProcessingGrayEffect.GetComponent<ColorInGrayOut>().SetOtherPlayer(OtherPlayer);
-        Debug.Log("[GM] PostProcessing Gray activated");
-    }
-
-    private void ActivateBlinkingLight()
-    {
-        BlinkingLightEffect.SetActive(true);
-        BlinkingLightEffect.GetComponent<PositionOtherToFOV>().SetOtherPlayer(OtherPlayer);
-        Debug.Log("[GM] Blinking light activated");
-    }
+    //private void ActivateBlinkingLight()
+    //{
+    //    BlinkingLightEffect.SetActive(true);
+    //    BlinkingLightEffect.GetComponent<PositionOtherToFOV>().SetOtherPlayer(OtherPlayer);
+    //    Debug.Log("[GM] Blinking light activated");
+    //}
 
     private void ActivateGuidingArrow()
     {
@@ -143,40 +143,45 @@ public class FeedbackManager : NetworkBehaviour
         {
             AuraEffect = OtherPlayer.GetComponentInChildren<AuraManager>();
         }
-        PostProcessingGrayEffect.SetActive(false);
+        //PostProcessingGrayEffect.SetActive(false);
         BlinkingLightEffect.SetActive(false);
         GuidingArrowEffect.SetActive(false);
         AuraEffect.isActive = false;
         Debug.Log("[GM] All effects deactivated");
     }
 
-    public int TryUpdateConditions(bool tracing)
-    {
-        if (GameManager.Experimenter == null || GameManager.Participant == null)
-        {
-            Debug.LogError("[GM] CHANGES REVERTED: Experimenter or Participant is null");
-            return -1;
-        }
-        UpdateConditionsServerRpc(tracing);
-        return 0;
-    }
-    [ServerRpc(RequireOwnership = false)]
-    public void UpdateConditionsServerRpc(bool tracing)
-    {
-        TracingState.Value = tracing;
-    }
 
-    private void ConditionChanged(bool previous, bool current)
+    private void TracingStateUpdated(bool previous, bool current)
     {
+        Debug.Log("[GM] Tracing state changed from " + previous + " to " + current);
+        if (current)
+        {
+            Tracer.InitiateTracing();
+        }
+        else
+        {
+            Tracer.EndTracing();
+        }
     }
 
     private void ExperimentStateChanged(int prev, int current)
     {
         StateDefined.Value = current;
         ApplyStateChange();
-        //if (current != prev)
-        //{
-        //    ApplyStateChange();
-        //}
+    }
+
+    public AuraManager GetAuraEffect()
+    {
+        if (AuraEffect == null)
+        {
+            AuraEffect = OtherPlayer.GetComponentInChildren<AuraManager>();
+        }
+        if (AuraEffect == null)
+        {
+            Debug.LogError("[GM] Aura effect not found");
+            return null;
+        }
+        AuraEffect.OverridePeriod();
+        return AuraEffect;
     }
 }

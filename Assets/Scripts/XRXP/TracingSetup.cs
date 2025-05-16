@@ -22,6 +22,7 @@ public class TracingSetup : MonoBehaviour
         {
             return;
         }
+        Debug.Log("[Tracing] Initiating tracing");
         StartCoroutine(BeginTracingRoutine());
     }
 
@@ -31,6 +32,7 @@ public class TracingSetup : MonoBehaviour
         {
             return;
         }
+        Debug.Log("[Tracing] End tracing");
         StartCoroutine(EndTracingRoutine());
     }
 

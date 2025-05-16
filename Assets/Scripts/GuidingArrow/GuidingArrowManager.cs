@@ -5,14 +5,24 @@ using UnityEngine;
 public class GuidingArrowManager : MonoBehaviour
 {
     [Header("References")]
-    [SerializeField] Camera vrCamera;
     [SerializeField] GameObject Arrow;
-    [Header("Users to Track")]
-    [SerializeField] GameObject OtherPlayer;
 
-    [SerializeField] Color YellowColor = new Color(1f, 1f, 1f);
-    [SerializeField] Color RedColor = new Color(1f, 0f, 0f);
+    [Header("Constants To Tune")]
+    [SerializeField] float SafeSeparationZone = 5;
+    [SerializeField] float MaxSeparationZone = 10;
+
+    [Header("Colors of the Light")]
+    [SerializeField] Color InitialColor = Color.white;
+    [SerializeField] Color MidColor;
+    [SerializeField] Color EndColor;
+
+    [Header("Blinking Properties")]
+    [SerializeField] float MinimumBlinkingSpeed = 4f;
+
+    private Camera vrCamera;
+    private GameObject OtherPlayer;
     private Material BlinkingMaterial;
+    private float customTime;
 
     // Start is called before the first frame update
     void Start()
@@ -20,8 +30,15 @@ public class GuidingArrowManager : MonoBehaviour
         vrCamera = Camera.main;
         Arrow.SetActive(false);
         BlinkingMaterial = Arrow.GetComponent<MeshRenderer>().sharedMaterial;
+        BlinkingMaterial.SetColor("_Color", InitialColor);
     }
 
+    private void OnApplicationQuit()
+    {
+        BlinkingMaterial.SetColor("_Color", InitialColor);
+        BlinkingMaterial.SetFloat("_Speed", MinimumBlinkingSpeed);
+        BlinkingMaterial.SetFloat("_CustomTime", 0f);
+    }
     private bool ObjectInCameraView(GameObject obj)
     {
         Vector3 screenPoint = Camera.main.WorldToViewportPoint(obj.transform.position);
@@ -31,6 +48,9 @@ public class GuidingArrowManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        customTime += Time.unscaledDeltaTime;
+        BlinkingMaterial.SetFloat("_CustomTime", customTime);
+
         if (OtherPlayer == null)
         {
             return;
@@ -38,8 +58,14 @@ public class GuidingArrowManager : MonoBehaviour
 
         if (!ObjectInCameraView(OtherPlayer) ) //The Object is not in the FOV of the Camera
         {
+            float Distance = Vector3.Distance(vrCamera.transform.position, OtherPlayer.transform.position);
+            if (Distance > MaxSeparationZone)
+            {
+                Arrow.SetActive(false);
+                return;
+            }
             Arrow.transform.LookAt(OtherPlayer.transform.position); //Make the Arrow look at the Camera
-            ComputerColorFrequency();
+            ComputerColorFrequency(Distance);
             Arrow.SetActive(true);
         }
         else //Object is in the FOV of the Camera
@@ -48,19 +74,18 @@ public class GuidingArrowManager : MonoBehaviour
         }
     }
 
-    private void ComputerColorFrequency()
+    private void ComputerColorFrequency(float Distance)
     {
-        float Distance = Vector3.Distance(vrCamera.transform.position, OtherPlayer.transform.position);
-        float value = Mathf.Min(1, (Distance - 5) / 10);
-        Color color = new Color(1f, 1f, 1f);
-        float period = 2f;
+        float value = Mathf.Min(1, (Distance - SafeSeparationZone) / MaxSeparationZone);
+        Color color = InitialColor;
+        float frequency = MinimumBlinkingSpeed;
         if (value > 0)
         {
-            color = Color.Lerp(YellowColor, RedColor, value);
-            period = Mathf.Lerp(2f, 5f, value);
+            color = Color.Lerp(MidColor, EndColor, value);
+            frequency = Mathf.Lerp(frequency, frequency*2, value);
         }
         BlinkingMaterial.SetColor("_Color", color);
-        BlinkingMaterial.SetFloat("_Speed", period);
+        BlinkingMaterial.SetFloat("_Speed", frequency);
     }
     public void SetOtherPlayer(GameObject player)
     {

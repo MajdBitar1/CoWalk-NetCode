@@ -6,12 +6,13 @@ using UnityEngine.UI;
 
 public class UIChangesTransmitter : MonoBehaviour
 {
+    [SerializeField] FeedbackManager feedbackManager;
+
     [Header("Toggles")]
     [SerializeField] Toggle Aura;
-    [SerializeField] Toggle BlinkingLight;
     [SerializeField] Toggle GuidingArrow;
-    [SerializeField] Toggle PPGrayEffect;
-    [SerializeField] Toggle Recording;
+    [SerializeField] Toggle Tracing;
+    //[SerializeField] Toggle BlinkingLight;
 
     [Header("Local Stats")]
     [SerializeField] TextMeshProUGUI LocalSpeed;
@@ -27,11 +28,14 @@ public class UIChangesTransmitter : MonoBehaviour
 
     private PlayerNetworkInfo m_localinfo, m_remoteinfo;
 
-    [SerializeField] FeedbackManager feedbackManager;
+    private Vector3 LocalPrevPosition, RemotePrevPosition;
+
 
     private void Start()
     {
         feedbackManager = FindAnyObjectByType<FeedbackManager>();
+        LocalPrevPosition = Vector3.zero;
+        RemotePrevPosition = Vector3.zero;
     }
     public void OnToggleAura()
     {
@@ -41,44 +45,45 @@ public class UIChangesTransmitter : MonoBehaviour
         }
         feedbackManager.UpdateExperimentStateServerRpc(1);
     }
-    public void OnToggleBlinking()
-    {
-        if (!BlinkingLight.isOn)
-        {
-            feedbackManager.UpdateExperimentStateServerRpc(0);
-        }
-        feedbackManager.UpdateExperimentStateServerRpc(2);
-    }
     public void OnToggleArrow()
     {
         if (!GuidingArrow.isOn)
         {
             feedbackManager.UpdateExperimentStateServerRpc(0);
         }
-        feedbackManager.UpdateExperimentStateServerRpc(3);
+        feedbackManager.UpdateExperimentStateServerRpc(2);
     }
-    public void OnToggleGrayEffect()
-    {
-        if (!PPGrayEffect.isOn)
-        {
-            feedbackManager.UpdateExperimentStateServerRpc(0);
-        }
-        feedbackManager.UpdateExperimentStateServerRpc(4);
-    }
+    //public void OnToggleBlinking()
+    //{
+    //    if (!BlinkingLight.isOn)
+    //    {
+    //        feedbackManager.UpdateExperimentStateServerRpc(0);
+    //    }
+    //    feedbackManager.UpdateExperimentStateServerRpc(3);
+    //    resetAll();
+    //    BlinkingLight.isOn = true;
+    //}
+
     public void OnToggleTracing()
     {
-        //feedbackManager.UpdateExperimentStateServerRpc(1);
+        feedbackManager.UpdateTracingStateServerRpc(Tracing.isOn);
     }
 
     private void resetAll()
     {
-        Aura.isOn = false;
-        BlinkingLight.isOn = false;
-        GuidingArrow.isOn = false;
-        PPGrayEffect.isOn = false;
+        try
+        {
+            Aura.isOn = false;
+            //BlinkingLight.isOn = false;
+            GuidingArrow.isOn = false;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("[UIChangesTransmitter] Error resetting toggles: " + e.Message);
+        }
     }
 
-    private void Update()
+    private void LateUpdate()
     {
         UpdateLocalPlayerUI();
         UpdateRemotePlayerUI();
@@ -93,7 +98,15 @@ public class UIChangesTransmitter : MonoBehaviour
             return;
         }
         LocalSpeed.text = Mathf.Round(m_localinfo.Speed.Value).ToString();
-        LocalFreq.text = m_localinfo.CycleDuration.Value.ToString();
+        UpdateRealLocalSpeed();
+    }
+
+    private void UpdateRealLocalSpeed()
+    {
+        float DistanceCovered = Vector3.Distance(m_localinfo.transform.position, LocalPrevPosition);
+        float Velocity = Mathf.Round(DistanceCovered * 100 / Time.fixedDeltaTime) / 100;
+        LocalFreq.text = Velocity.ToString();
+        LocalPrevPosition = m_localinfo.transform.position;
     }
 
     private void UpdateRemotePlayerUI()
@@ -104,7 +117,14 @@ public class UIChangesTransmitter : MonoBehaviour
             return;
         }
         RemoteSpeed.text = Mathf.Round(m_remoteinfo.Speed.Value).ToString();
-        RemoteFreq.text = m_remoteinfo.CycleDuration.Value.ToString();
+        UpdateRealRemoteSpeed();
+    }
+    private void UpdateRealRemoteSpeed()
+    {
+        float DistanceCovered = Vector3.Distance(m_remoteinfo.transform.position, RemotePrevPosition);
+        float RemoteVelo = Mathf.Round(DistanceCovered * 100 / Time.fixedDeltaTime) / 100;
+        RemoteFreq.text = RemoteVelo.ToString();
+        RemotePrevPosition = m_remoteinfo.transform.position;
     }
 
     private void UpdateGroupStats()

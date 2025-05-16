@@ -16,6 +16,10 @@ public class FootstepsAudio : MonoBehaviour
     private float timer = 0;
     private bool isStandingStill = false;
 
+    private bool isLocal = false;
+
+    private AuraManager m_auraManager;
+
     void Start()
     {
         audioSource = GetComponent<AudioSource>();
@@ -24,7 +28,16 @@ public class FootstepsAudio : MonoBehaviour
         if (GetComponentInParent<NetworkObject>().IsOwner)
         {
             audioSource.outputAudioMixerGroup = GameManager.Instance.GetAudioMixer().FindMatchingGroups("LocalFootsteps")[0];
+            isLocal = true;
+            return;
         }
+        m_auraManager = FindAnyObjectByType<FeedbackManager>().GetAuraEffect();
+        if (m_auraManager == null)
+        {
+            Debug.LogError("[FOOTSTEPS] INIT No AuraManager found");
+            return;
+        }
+        m_auraManager.OverridePeriod();
     }
 
     public void PlayFootstepSound()
@@ -37,6 +50,20 @@ public class FootstepsAudio : MonoBehaviour
         {
             clipcounter = 0;
         }
+
+        if (!isLocal)
+        {
+            if (m_auraManager != null)
+            {
+                m_auraManager.PlayAura();
+            }
+            else
+            {
+                Debug.LogError("[FOOTSTEPS] No AuraManager found");
+                m_auraManager = FindAnyObjectByType<FeedbackManager>().GetAuraEffect();
+            }
+        }    
+
     }
 
     private void Update()

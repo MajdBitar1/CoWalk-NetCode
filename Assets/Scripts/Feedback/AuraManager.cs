@@ -5,62 +5,57 @@ using Unity.Netcode;
 using UnityEngine.VFX;
 using System.Threading;
 
-[RequireComponent(typeof(MeshRenderer))]
+[RequireComponent(typeof(VisualEffect))]
 public class AuraManager : MonoBehaviour
 {
     [Header("Constants To Tune")]
     [SerializeField] float SafeSeparationZone = 5;
     [SerializeField] float MaxSeparationZone = 10;
-    [SerializeField] float StartingValue = 12;
-    [SerializeField] Color StartingColor = new Color(255 / 255f, 252 / 255f, 0 / 255f, 1f);
-    [SerializeField] Color EndingColor = new Color(255 / 255f, 83 / 255f, 0 / 255f, 1f);
-    [SerializeField] public float PowerValue = 1f;
 
-    MeshRenderer m_meshRenderer;
-    Material m_material;
+    [Header("Aura Pulse Effect Settings")]
+    [SerializeField] float InitialScale = 1f;
+    [SerializeField] float InitialLifeTime = 1.5f;
+    [SerializeField] float InitialPulsePeriod = 1.5f;
 
-    private VisualEffect m_AuraEffect;
+    [Header("Colors of the Aura")]
+    [SerializeField] Color InitialColor = Color.white;
+    [SerializeField] Color MidColor;
+    [SerializeField] Color EndColor;
 
-    [Header("Debug")]
-    [SerializeField] GameObject OtherPlayer;
-
+    [Header("Aura Current Status")]
     public bool AuraBroken = false;
-    private bool attachedToLocalPlayer = false;
-
-    [SerializeField] bool inView = false;
     public bool isActive = false;
 
-    [SerializeField] float PeriodOfPulse = 1.5f;
+    private VisualEffect m_AuraEffect;
+    private GameObject OtherPlayer;
+
+    private float PeriodOfPulse = 1.5f;
+    private bool inView = false;
     private float time = 0f;
+
+    private bool OverridePulsePeriod = false;
+
     void Start()
     {
-        m_meshRenderer = GetComponent<MeshRenderer>();
-        m_material = m_meshRenderer.sharedMaterial;
-        m_meshRenderer.enabled = false;
         m_AuraEffect = GetComponent<VisualEffect>();
         isActive = false;
-        if (GetComponentInParent<NetworkObject>() != null)
+        PeriodOfPulse = InitialPulsePeriod;
+        if (GetComponentInParent<SetupDummyAura>() != null)
         {
-            if (GetComponentInParent<NetworkObject>().IsOwner)
-            {
-                attachedToLocalPlayer = true;
-            }
+            return;
         }
-    }
-
-    public void SetAttachedToLocal(bool value)
-    {
-        attachedToLocalPlayer = value;
+        if (GetComponentInParent<NetworkObject>().IsOwner)
+        {
+            Destroy(this.gameObject);
+        }
     }
 
     private void OnApplicationQuit()
     {
-        //gameObject.transform.localScale = new Vector3(10, 10, 10);
-        //m_material.SetFloat("_Size", 0.04f);
-        m_material.SetColor("_WaveColor", new Color(0.65f, 0.65f, 0.65f, 1f));
-
-        m_AuraEffect.SetFloat("Lifetime", 1.5f);
-        m_AuraEffect.SetVector4("Color", Color.white);
+        PeriodOfPulse = InitialPulsePeriod;
+        m_AuraEffect.SetFloat("Lifetime", InitialLifeTime);
+        m_AuraEffect.SetFloat("Scale", InitialScale);
+        m_AuraEffect.SetVector4("Color", InitialColor);
     }
 
     public int SetOtherPlayer(GameObject player)
@@ -82,19 +77,23 @@ public class AuraManager : MonoBehaviour
     }
     private void Update()
     {
-        time += Time.deltaTime;
-        if (time > PeriodOfPulse)
+        if (OverridePulsePeriod)
         {
-            time = 0f;
-            PlayAura();
+            return;
         }
+
+        //time += Time.deltaTime;
+        //if (time > PeriodOfPulse)
+        //{
+        //    time = 0f;
+        //    PlayAura();
+        //}
     }
 
-    private void PlayAura()
+    public void PlayAura()
     {
-        if (attachedToLocalPlayer || !isActive)
+        if (!isActive)
         {
-            m_meshRenderer.enabled = false;
             return;
         }
         if (OtherPlayer == null)
@@ -107,21 +106,19 @@ public class AuraManager : MonoBehaviour
     private int Aura(float distance)
     {
         //Normalize Distance relative to Min and Max Separation Zones, to Get a value which is Negative While in Safe zone, between safe and max the value will be between 0 and 1
-        float value = Mathf.Min(1, (distance - SafeSeparationZone) / MaxSeparationZone);
-        Debug.Log("[Aura] Value: " + value);
+        float NormalizedDistance = Mathf.Min(1, (distance - SafeSeparationZone) / MaxSeparationZone);
 
         //Return Bool that checks if other player is in view or not
         inView = ObjectInCameraView(transform.parent.gameObject);
 
-        if (!AuraBroken && value > 0)
+        if (!AuraBroken && NormalizedDistance > 0)
         {
-            PeriodOfPulse = 1.5f - value;
+            PeriodOfPulse = InitialPulsePeriod - NormalizedDistance/2;
             // Value > 0 means the separation distance is > SAFE ZONE
             //Check if you can see the other player
             if (inView)
             {
                 //if you can see other player, ripple effect will stop
-                m_meshRenderer.enabled = false;
                 m_AuraEffect.Stop();
                 return 1;
             }
@@ -129,28 +126,24 @@ public class AuraManager : MonoBehaviour
             else
             {
                 // if Value exceeds 1 then the separatino distance > MAX distance and thus the aura breaks!
-                if (value >= 1f)
+                if (NormalizedDistance >= 1f)
                 {
-                    m_meshRenderer.enabled = false;
                     m_AuraEffect.Stop();
                     AuraBroken = true;
                     return -1;
                 }
-                // First Scale up based on separation distance, this will ensure that the other player will see ripple effect even at high separation
 
-                //Second is to change the color of the ripples, this will be a gradient from Oranage to Red
-                Color ColorOnGrad = Color.Lerp(StartingColor, EndingColor, value);
+
+                // Change the color of the ripples, this will be a gradient from Oranage to Red
+                Color ColorOnGrad = Color.Lerp(MidColor, EndColor, NormalizedDistance);
                 ColorOnGrad.a = 1f;
-
-                m_AuraEffect.SetFloat("Scale", 1f + value*2);
-                m_AuraEffect.SetFloat("Lifetime", 1f);
                 m_AuraEffect.SetVector4("Color", ColorOnGrad);
-                m_AuraEffect.Play();
 
+                // Scale up based on separation distance, this will ensure that the other player will see ripple effect even at high separation
+                m_AuraEffect.SetFloat("Scale", InitialScale + NormalizedDistance*3f);
+                m_AuraEffect.SetFloat("Lifetime", InitialLifeTime - NormalizedDistance);
                 //Finally Play the effect
-                //gameObject.transform.localScale = new Vector3(StartingValue + 2 + value * MaxSeparationZone, StartingValue + 2 + value * MaxSeparationZone, 1f);
-                //m_material.SetColor("_WaveColor", ColorOnGrad);
-                //m_meshRenderer.enabled = true;
+                m_AuraEffect.Play();
                 return 2;
             }
         }
@@ -158,29 +151,30 @@ public class AuraManager : MonoBehaviour
         //Moreover if aura was broken and players enter safe zone then the AURA will be re-activated again
         else
         {
-            if (value <= 0)
+            if (NormalizedDistance <= 0)
             {
-                PeriodOfPulse = 1.5f;
+                PeriodOfPulse = InitialPulsePeriod;
                 AuraBroken = false;
                 if (inView)
                 {
                     //if you can see other player, ripple effect will stop
-                    m_meshRenderer.enabled = false;
                     m_AuraEffect.Stop();
                     return 1;
                 }
 
-                m_AuraEffect.SetFloat("Scale", 1f);
-                m_AuraEffect.SetFloat("Lifetime", 1.5f);
-                m_AuraEffect.SetVector4("Color", Color.white);
-                m_AuraEffect.Play();
+                m_AuraEffect.SetVector4("Color", InitialColor);
+                m_AuraEffect.SetFloat("Scale", InitialScale);
+                m_AuraEffect.SetFloat("Lifetime", InitialLifeTime);
 
-                //gameObject.transform.localScale = new Vector3(StartingValue + 2 + value * MaxSeparationZone, StartingValue + 2 + value * MaxSeparationZone, 1f);
-                //m_material.SetColor("_WaveColor", new Color(0.65f, 0.65f, 0.65f, 1f));
-                //m_meshRenderer.enabled = true;
+                m_AuraEffect.Play();
                 return 2;
             }
             return -1;
         }
+    }
+
+    public void OverridePeriod()
+    {
+        OverridePulsePeriod = true;
     }
 }

@@ -37,7 +37,7 @@ public class ExperimenterManager : MonoBehaviour
         {
             case 0:
                 statsMenu.gameObject.transform.forward = Camera.main.transform.forward.normalized;
-                statsMenu.gameObject.transform.position = GameManager.LocalPlayerObject.gameObject.transform.position + Camera.main.transform.forward.normalized * 2 + new Vector3(0, 0.8f, 0);
+                statsMenu.gameObject.transform.position = GameManager.LocalPlayerObject.transform.position + Camera.main.transform.forward.normalized * 2 + new Vector3(0, 0.8f, 0);
                 Vector3 InfrontOfPlayer = Vector3.Cross(Camera.main.transform.forward.normalized, Camera.main.transform.up.normalized).normalized;
                 toggleMenu.gameObject.transform.forward = InfrontOfPlayer;
                 toggleMenu.gameObject.transform.position = GameManager.LocalPlayerObject.gameObject.transform.position + InfrontOfPlayer * 1.25f + new Vector3(0, 0.8f, 0);
