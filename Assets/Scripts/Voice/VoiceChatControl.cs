@@ -5,104 +5,102 @@ using Unity.Services.Core;
 using Unity.Services.Vivox;
 using Unity.Netcode;
 using System.Collections;
+using System.Threading.Tasks;
 
 public class VoiceChatControl : MonoBehaviour
 {
-    private void OnEnable()
+    [SerializeField] string channelToJoin = "Lobby";
+
+    bool channelReady = false;
+    private async void Start()
     {
-        NetworkManager.Singleton.OnClientConnectedCallback += LocalPlayerJoined;
+        await StartUnityServices();  // Make sure Unity Services are initialized before anything else
     }
 
-    void OnDisable()
-    {
-        NetworkManager.Singleton.OnClientConnectedCallback -= LocalPlayerJoined;
-    }
-
-    void LocalPlayerJoined(ulong clientId)
-    {
-        if (clientId == NetworkManager.Singleton.LocalClientId)
-        {
-            //Local player joined
-            Debug.Log("Local player joined");
-            JoinEchoChannel();
-        }
-    }
-    async void JoinEchoChannel()
-    {
-//#if UNITY_EDITOR && AUTH_PACKAGE_PRESENT
-        await UnityServices.InitializeAsync();
-        await AuthenticationService.Instance.SignInAnonymouslyAsync();
-        await VivoxService.Instance.InitializeAsync();
-        await VivoxService.Instance.LoginAsync();
-        await VivoxService.Instance.JoinEchoChannelAsync("ChannelName", ChatCapability.AudioOnly);
-//#endif
-    }
-
-    private IEnumerator Initialize()
-    {
-        //Wait 5 seconds
-        yield return new WaitForSeconds(2);
-        InitializeAsync();
-        yield return new WaitForSeconds(2);
-        LoginToVivoxAsync();
-        yield return new WaitForSeconds(2);
-        JoinChannelAsync();
-        yield return null;
-    }
-
-    [ContextMenu("Initialize")]
-    async void InitializeAsync()
+    private async Task StartUnityServices()
     {
         try
         {
-            await UnityServices.InitializeAsync();
-            await AuthenticationService.Instance.SignInAnonymouslyAsync();
-            await VivoxService.Instance.InitializeAsync();
+            if (!UnityServices.State.Equals(ServicesInitializationState.Initialized))
+            {
+                await UnityServices.InitializeAsync();
+            }
+            else
+            {
+                Debug.Log("[VIVOX] Unity Services already initialized");
+            }
+
+            if (!AuthenticationService.Instance.IsSignedIn)
+            {
+                await AuthenticationService.Instance.SignInAnonymouslyAsync();
+            }
+            else
+            {
+                Debug.Log("[VIVOX] Already signed in to Unity Services");
+            }
         }
         catch (Exception e)
         {
-            Debug.LogError($"[VOICECHAT]Unity Services Initialization failed: {e.Message}");
-            return;
+            Debug.LogError($"[VIVOX] Unity Services Initialization failed: {e.Message}");
         }
-    }
 
-    [ContextMenu("Login to Vivox")]
-    public async void LoginToVivoxAsync()
-    {
         try
         {
-            await VivoxService.Instance.InitializeAsync();
-            LoginOptions options = new LoginOptions();
-            options.EnableTTS = false;
-            await VivoxService.Instance.LoginAsync(options);
+            Debug.Log("[VIVOX] Unity Services initialized and authenticated");
+            // Now it's safe to start Vivox
+            await InitializeVivoxAndJoinChannel();
         }
         catch (Exception e)
         {
-            Debug.LogError($"[VOICECHAT]Unity Services Initialization failed: {e.Message}");
-            return;
+            Debug.LogError($"[VIVOX] Vivox initialization failed: {e.Message}");
         }
     }
 
-    [ContextMenu("Join Channel Vivox")]
-    public async void JoinChannelAsync()
+    private async Task InitializeVivoxAndJoinChannel()
     {
         try
         {
             await VivoxService.Instance.InitializeAsync();
-            string channelToJoin = "Lobby";
+            await VivoxService.Instance.LoginAsync();
+
+            Debug.Log("[VIVOX] Vivox initialized and logged in");
+
             Channel3DProperties channel3DProperties = new Channel3DProperties(
-                15,
-                6,
-                1f,
+                15,    // audibility range
+                6,     // conversational range
+                1f,     // audio roll-off
                 AudioFadeModel.LinearByDistance
             );
-            //await VivoxService.Instance.JoinPositionalChannelAsync(channelToJoin, ChatCapability.AudioOnly, channel3DProperties);
-            await VivoxService.Instance.JoinGroupChannelAsync(channelToJoin, ChatCapability.AudioOnly);
+
+            await VivoxService.Instance.JoinPositionalChannelAsync(
+                channelToJoin,
+                ChatCapability.AudioOnly,
+                channel3DProperties
+            );
+
+            channelReady = true;
+            Debug.Log("[VIVOX] Successfully joined positional audio channel");
         }
         catch (Exception e)
         {
-            Debug.LogError($"[VOICECHAT]Unity Services Initialization failed: {e.Message}");
+            Debug.LogError($"[VIVOX] Vivox setup failed: {e.Message}");
+        }
+    }
+
+    private void LateUpdate()
+    {
+        if (GameManager.LocalPlayerObject == null)
+        {
             return;
         }
+        if (!channelReady)
+        {
+            return;
+        }
+
+        VivoxService.Instance.Set3DPosition(
+            GameManager.LocalPlayerObject,  // Player's position
+            channelToJoin
+        );
     }
 }

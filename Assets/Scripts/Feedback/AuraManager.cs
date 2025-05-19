@@ -108,7 +108,7 @@ public class AuraManager : MonoBehaviour
                 if (NormalizedDistance >= 1f)
                 {
                     m_AuraEffect.Stop();
-                    AuraBroken = true;
+                    //AuraBroken = true;
                     return -1;
                 }
 

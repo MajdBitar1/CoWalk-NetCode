@@ -11,19 +11,14 @@ using static UnityEngine.CullingGroup;
 
 public class GameManager : Singleton<GameManager>
 {
-    public delegate void PlayerListUpdated();
     public static List<GameObject> PlayerRefList = new List<GameObject>();
-    public static GameObject origin, LocalPlayerObject;
-    public static GameObject RemotePlayerObject;
+    public static GameObject origin;
+    public static GameObject LocalPlayerObject, RemotePlayerObject;
     public static GameObject Experimenter, Participant;
-    public static bool PlayersReady = false;
-    public int previousPlayerCount = 0;
+
+    private int previousPlayerCount = 0;
 
     [SerializeField] private AudioMixer AudioMixer;
-
-    public override void OnNetworkSpawn()
-    {
-    }
 
     public override void OnNetworkDespawn()
     {
@@ -38,7 +33,7 @@ public class GameManager : Singleton<GameManager>
 
     void CheckPlayerCount()
     {
-        AvatarEntity[] avatarentities = FindObjectsByType<AvatarEntity>(FindObjectsSortMode.None);//GameObject.FindGameObjectsWithTag("Player");
+        AvatarEntity[] avatarentities = FindObjectsByType<AvatarEntity>(FindObjectsSortMode.None);
         //get the GameObjects of the AvatarEntity objects and put them in an array
         GameObject[] players = new GameObject[avatarentities.Length];
         for (int i = 0; i < avatarentities.Length; i++)

@@ -24,6 +24,8 @@ public class GuidingArrowManager : MonoBehaviour
     private Material BlinkingMaterial;
     private float customTime;
 
+    private float ShowTimer = 0f;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -48,6 +50,11 @@ public class GuidingArrowManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        if (ShowTimer == 0f)
+        {
+            Arrow.SetActive(false);
+        }
+
         customTime += Time.unscaledDeltaTime;
         BlinkingMaterial.SetFloat("_CustomTime", customTime);
 
@@ -90,5 +97,10 @@ public class GuidingArrowManager : MonoBehaviour
     public void SetOtherPlayer(GameObject player)
     {
         OtherPlayer = player;
+    }
+
+    public void ShowArrow()
+    {
+        ShowTimer = 1f;
     }
 }

@@ -19,13 +19,10 @@ public class Armswing : MonoBehaviour
     [SerializeField] float MinimumPlayerSpeedThreshold = 0.2f;
     [SerializeField] float MaximumPlayerSpeedThreshold = 100f;
 
-    //[SerializeField] float DifferenceHeadandDirection = 0.6f;
-    //[SerializeField] float RotationDetectionThreshold = 0.98f;
-
     [Header("Smoothing Movement")]
     [SerializeField] int BufferWindow = 30;
 
-    Vector3 prevPosLeft, prevPosRight, prevHipDirection;
+    Vector3 prevPosLeft, prevPosRight;
     Vector3 HipDirection,HeadDirection;
     Vector3 PlayerCurrentPosition, PlayerPreviousFramePosition;
 
@@ -52,7 +49,7 @@ public class Armswing : MonoBehaviour
 
     void Update()
     {
-        updateplayermovement();
+        UpdatePlayerMovement();
     }
 
     public PlayerMovementData GetSpeedFromSwings()
@@ -61,7 +58,7 @@ public class Armswing : MonoBehaviour
     }
 
 
-    private void updateplayermovement()
+    private void UpdatePlayerMovement()
     {
         FinalPlayerSpeed = SmoothMovement(ComputeMovement());
     }
@@ -73,7 +70,6 @@ public class Armswing : MonoBehaviour
         PlayerPreviousFramePosition = transform.localPosition;
         prevPosLeft = _Lefthand.transform.localPosition;
         prevPosRight = _RightHand.transform.localPosition;
-        prevHipDirection = HipDirection;
         playerspeed = 0;
         playerprevspeed = 0;
     }
@@ -103,11 +99,6 @@ public class Armswing : MonoBehaviour
         playerspeed = playerprevspeed * (0.9f - friction * playerprevspeed) + totalmovement;
         float misalignment = Vector3.Dot(HipDirection, HeadDirection);
 
-        //if (misalignment < DifferenceHeadandDirection)
-        //{
-        //    Debug.Log("[ArmSwing] Head and Hip MisAlignment");
-        //    //playerspeed = playerspeed * misalignment;
-        //}
 
         //Reduce Speed For these conditions
         if (playerspeed < MinimumPlayerSpeedThreshold)
@@ -124,7 +115,6 @@ public class Armswing : MonoBehaviour
         //Setup parameters for next frame
         prevPosLeft = _Lefthand.transform.localPosition;
         prevPosRight = _RightHand.transform.localPosition;
-        prevHipDirection = HipDirection;
         PlayerPreviousFramePosition = PlayerCurrentPosition;
         playerprevspeed = playerspeed;
 

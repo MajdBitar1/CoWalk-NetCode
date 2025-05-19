@@ -12,10 +12,6 @@ public class FeedbackManager : NetworkBehaviour
 
     [SerializeField] TracingSetup Tracer;
 
-    //[SerializeField] GameObject PostProcessingGrayEffect;
-
-    [SerializeField] GameObject BlinkingLightEffect;
-
     [SerializeField] GameObject GuidingArrowEffect;
 
     [SerializeField] AuraManager AuraEffect;
@@ -69,6 +65,40 @@ public class FeedbackManager : NetworkBehaviour
         TracingState.Value = tracing;
     }
 
+    public void PlayFeedback()
+    {
+        switch (StateDefined.Value)
+        {
+            case 0:
+                // No effect
+                break;
+            case 1:
+                AuraFeedback();
+                break;
+            case 2:
+                ActivateGuidingArrow();
+                break;
+            default:
+                Debug.LogError("[GM] Invalid state: " + StateDefined.Value);
+                break;
+        }
+    }
+
+    private void AuraFeedback()
+    {
+        if (AuraEffect == null)
+        {
+            AuraEffect = OtherPlayer.GetComponentInChildren<AuraManager>();
+        }
+        AuraEffect.GetComponent<AuraManager>().SetOtherPlayer(GameManager.LocalPlayerObject);
+        AuraEffect.PlayAura();
+    }
+
+    private void GuidingArrowFeedback()
+    {
+        GuidingArrowEffect.GetComponent<GuidingArrowManager>().ShowArrow();
+    }
+
     private void LateUpdate()
     {
         if (OtherPlayer == null)
@@ -103,22 +133,11 @@ public class FeedbackManager : NetworkBehaviour
             case 2:
                 ActivateGuidingArrow();
                 break;
-            //case 3:
-            //    ActivateBlinkingLight();
-            //    break;
             default:
                 Debug.LogError("[GM] Invalid state: " + StateDefined.Value);
                 break;
         }
     }
-
-    //private void ActivateBlinkingLight()
-    //{
-    //    BlinkingLightEffect.SetActive(true);
-    //    BlinkingLightEffect.GetComponent<PositionOtherToFOV>().SetOtherPlayer(OtherPlayer);
-    //    Debug.Log("[GM] Blinking light activated");
-    //}
-
     private void ActivateGuidingArrow()
     {
         GuidingArrowEffect.SetActive(true);
@@ -139,17 +158,12 @@ public class FeedbackManager : NetworkBehaviour
 
     private void DeactivateAllStates()
     {
-        if (AuraEffect == null)
-        {
-            AuraEffect = OtherPlayer.GetComponentInChildren<AuraManager>();
-        }
-        //PostProcessingGrayEffect.SetActive(false);
-        BlinkingLightEffect.SetActive(false);
         GuidingArrowEffect.SetActive(false);
-        AuraEffect.isActive = false;
-        Debug.Log("[GM] All effects deactivated");
+        if (AuraEffect != null)
+        {
+            AuraEffect.isActive = false;
+        }
     }
-
 
     private void TracingStateUpdated(bool previous, bool current)
     {
@@ -168,19 +182,5 @@ public class FeedbackManager : NetworkBehaviour
     {
         StateDefined.Value = current;
         ApplyStateChange();
-    }
-
-    public AuraManager GetAuraEffect()
-    {
-        if (AuraEffect == null)
-        {
-            AuraEffect = OtherPlayer.GetComponentInChildren<AuraManager>();
-        }
-        if (AuraEffect == null)
-        {
-            Debug.LogError("[GM] Aura effect not found");
-            return null;
-        }
-        return AuraEffect;
     }
 }

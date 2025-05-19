@@ -13,11 +13,10 @@ public class PlayerMovementHandler : MonoBehaviour
     Armswing m_armSwing;
     CharacterController m_characterController;
 
-    public float MAXVALUE = 0.02f;
-    public float MINVALUE = -0.02f;
+    PlayerNetworkInfo m_playerNetworkInfo;
 
-
-    public bool DEBUG = false;
+    [SerializeField] float MAXVALUE = 0.01f;
+    [SerializeField] float MINVALUE = -0.02f;
 
     // Start is called before the first frame update
     void Start()
@@ -32,9 +31,17 @@ public class PlayerMovementHandler : MonoBehaviour
     {
         if (mecanimLegsAnimationController == null)
         {
-            mecanimLegsAnimationController = GameManager.LocalPlayerObject.GetComponentInChildren<MecanimLegsAnimationController>();
+            mecanimLegsAnimationController = GameManager.LocalPlayerObject?.GetComponentInChildren<MecanimLegsAnimationController>();
+            //Debug.LogError("[Movement]MecanimLegsAnimationController is null");
             return;
         }
+        if (m_armSwing == null)
+        {
+            m_armSwing = GetComponent<Armswing>();
+            //Debug.LogError("[Movement] Armswing is null");
+            return;
+        }
+
         SetMovementData(m_armSwing.GetSpeedFromSwings());
 
         if (CheckPlayerInput())
@@ -46,24 +53,18 @@ public class PlayerMovementHandler : MonoBehaviour
         {
             mecanimLegsAnimationController.armswing = Vector3.zero;
         }
-        if (GameManager.LocalPlayerObject?.GetComponent<PlayerNetworkInfo>() != null)
-        {
-            UpdateNetworkInfo();
-        }
-    }
 
-    private void UpdateNetworkInfo()
-    {
-        if (DEBUG)
+        if (m_playerNetworkInfo == null)
         {
-            GameManager.LocalPlayerObject?.GetComponent<PlayerNetworkInfo>().UpdateValues(
-            m_data.Direction,
-            10f,
-            3f
-            );
+            m_playerNetworkInfo = GameManager.LocalPlayerObject?.GetComponent<PlayerNetworkInfo>();
+            //Debug.LogError("[Movement] PlayerNetworkInfo is null");
             return;
         }
+        UpdateNetworkInfo();
+    }
 
+    void UpdateNetworkInfo()
+    {
         GameManager.LocalPlayerObject?.GetComponent<PlayerNetworkInfo>().UpdateValues(
             m_data.Direction,
             m_data.Speed,
