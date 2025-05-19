@@ -46,7 +46,10 @@ public class PlayerMovementHandler : MonoBehaviour
         {
             mecanimLegsAnimationController.armswing = Vector3.zero;
         }
-        UpdateNetworkInfo();
+        if (GameManager.LocalPlayerObject?.GetComponent<PlayerNetworkInfo>() != null)
+        {
+            UpdateNetworkInfo();
+        }
     }
 
     private void UpdateNetworkInfo()

@@ -46,8 +46,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c29e45bb193e3c345b49048f9eb57904, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SafeSeparationZone: 7
-  MaxSeparationZone: 15
+  SafeSeparationZone: 5
+  MaxSeparationZone: 10
   InitialScale: 1.2
   InitialLifeTime: 1.5
   InitialPulsePeriod: 1.5

@@ -15,7 +15,6 @@ public class AuraManager : MonoBehaviour
     [Header("Aura Pulse Effect Settings")]
     [SerializeField] float InitialScale = 1f;
     [SerializeField] float InitialLifeTime = 1.5f;
-    [SerializeField] float InitialPulsePeriod = 1.5f;
 
     [Header("Colors of the Aura")]
     [SerializeField] Color InitialColor = Color.white;
@@ -29,17 +28,13 @@ public class AuraManager : MonoBehaviour
     private VisualEffect m_AuraEffect;
     private GameObject OtherPlayer;
 
-    private float PeriodOfPulse = 1.5f;
     private bool inView = false;
-    private float time = 0f;
 
-    private bool OverridePulsePeriod = false;
 
     void Start()
     {
         m_AuraEffect = GetComponent<VisualEffect>();
         isActive = false;
-        PeriodOfPulse = InitialPulsePeriod;
         if (GetComponentInParent<SetupDummyAura>() != null)
         {
             return;
@@ -52,7 +47,6 @@ public class AuraManager : MonoBehaviour
 
     private void OnApplicationQuit()
     {
-        PeriodOfPulse = InitialPulsePeriod;
         m_AuraEffect.SetFloat("Lifetime", InitialLifeTime);
         m_AuraEffect.SetFloat("Scale", InitialScale);
         m_AuraEffect.SetVector4("Color", InitialColor);
@@ -74,20 +68,6 @@ public class AuraManager : MonoBehaviour
         Vector3 screenPoint = Camera.main.WorldToViewportPoint(obj.transform.position);
         bool onScreen = screenPoint.z > 0 && screenPoint.x > 0 && screenPoint.x < 1 && screenPoint.y > 0 && screenPoint.y < 1;
         return onScreen;
-    }
-    private void Update()
-    {
-        if (OverridePulsePeriod)
-        {
-            return;
-        }
-
-        //time += Time.deltaTime;
-        //if (time > PeriodOfPulse)
-        //{
-        //    time = 0f;
-        //    PlayAura();
-        //}
     }
 
     public void PlayAura()
@@ -113,7 +93,6 @@ public class AuraManager : MonoBehaviour
 
         if (!AuraBroken && NormalizedDistance > 0)
         {
-            PeriodOfPulse = InitialPulsePeriod - NormalizedDistance/2;
             // Value > 0 means the separation distance is > SAFE ZONE
             //Check if you can see the other player
             if (inView)
@@ -136,11 +115,10 @@ public class AuraManager : MonoBehaviour
 
                 // Change the color of the ripples, this will be a gradient from Oranage to Red
                 Color ColorOnGrad = Color.Lerp(MidColor, EndColor, NormalizedDistance);
-                ColorOnGrad.a = 1f;
                 m_AuraEffect.SetVector4("Color", ColorOnGrad);
 
                 // Scale up based on separation distance, this will ensure that the other player will see ripple effect even at high separation
-                m_AuraEffect.SetFloat("Scale", InitialScale + NormalizedDistance*3f);
+                m_AuraEffect.SetFloat("Scale", InitialScale + NormalizedDistance*10f);
                 m_AuraEffect.SetFloat("Lifetime", InitialLifeTime - NormalizedDistance);
                 //Finally Play the effect
                 m_AuraEffect.Play();
@@ -153,7 +131,6 @@ public class AuraManager : MonoBehaviour
         {
             if (NormalizedDistance <= 0)
             {
-                PeriodOfPulse = InitialPulsePeriod;
                 AuraBroken = false;
                 if (inView)
                 {
@@ -171,10 +148,5 @@ public class AuraManager : MonoBehaviour
             }
             return -1;
         }
-    }
-
-    public void OverridePeriod()
-    {
-        OverridePulsePeriod = true;
     }
 }

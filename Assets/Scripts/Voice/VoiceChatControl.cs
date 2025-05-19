@@ -8,31 +8,40 @@ using System.Collections;
 
 public class VoiceChatControl : MonoBehaviour
 {
-    private bool AttemptingToJoin = false;
-    private void Awake()
+    private void OnEnable()
     {
-        InitializeAsync();
+        NetworkManager.Singleton.OnClientConnectedCallback += LocalPlayerJoined;
     }
 
-    private void Start()
+    void OnDisable()
     {
-        StartCoroutine(Initialize());
+        NetworkManager.Singleton.OnClientConnectedCallback -= LocalPlayerJoined;
     }
 
-    private void FixedUpdate()
+    void LocalPlayerJoined(ulong clientId)
     {
-        if (VivoxService.Instance.ActiveChannels.Count < 1 && !AttemptingToJoin)
+        if (clientId == NetworkManager.Singleton.LocalClientId)
         {
-            Initialize();
+            //Local player joined
+            Debug.Log("Local player joined");
+            JoinEchoChannel();
         }
-
+    }
+    async void JoinEchoChannel()
+    {
+//#if UNITY_EDITOR && AUTH_PACKAGE_PRESENT
+        await UnityServices.InitializeAsync();
+        await AuthenticationService.Instance.SignInAnonymouslyAsync();
+        await VivoxService.Instance.InitializeAsync();
+        await VivoxService.Instance.LoginAsync();
+        await VivoxService.Instance.JoinEchoChannelAsync("ChannelName", ChatCapability.AudioOnly);
+//#endif
     }
 
     private IEnumerator Initialize()
     {
-        AttemptingToJoin = true;
         //Wait 5 seconds
-        yield return new WaitForSeconds(10);
+        yield return new WaitForSeconds(2);
         InitializeAsync();
         yield return new WaitForSeconds(2);
         LoginToVivoxAsync();
@@ -89,12 +98,10 @@ public class VoiceChatControl : MonoBehaviour
             );
             //await VivoxService.Instance.JoinPositionalChannelAsync(channelToJoin, ChatCapability.AudioOnly, channel3DProperties);
             await VivoxService.Instance.JoinGroupChannelAsync(channelToJoin, ChatCapability.AudioOnly);
-            AttemptingToJoin = false;
         }
         catch (Exception e)
         {
             Debug.LogError($"[VOICECHAT]Unity Services Initialization failed: {e.Message}");
-            AttemptingToJoin = false;
             return;
         }
     }

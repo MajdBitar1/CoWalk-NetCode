@@ -17,8 +17,9 @@ public class GameManager : Singleton<GameManager>
     public static GameObject RemotePlayerObject;
     public static GameObject Experimenter, Participant;
     public static bool PlayersReady = false;
-    [SerializeField] private AudioMixer AudioMixer;
     public int previousPlayerCount = 0;
+
+    [SerializeField] private AudioMixer AudioMixer;
 
     public override void OnNetworkSpawn()
     {

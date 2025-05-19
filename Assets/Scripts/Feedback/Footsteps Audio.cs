@@ -8,14 +8,17 @@ public class FootstepsAudio : MonoBehaviour
 {
     [SerializeField] List<AudioClip> clips;
     [SerializeField] AudioSource audioSource;
-    private int clipcounter = 0;
 
     private Vector3 StartingPosition, PrevPosition;
 
-    [SerializeField] float stepDistance = 0.5f;
+    private int clipcounter = 0;
     private float timer = 0;
-    private bool isStandingStill = false;
 
+
+    [SerializeField] float stepDistance = 0.5f;
+    private float StandingStillThreshold = 2f;
+
+    private bool isStandingStill = false;
     private bool isLocal = false;
 
     private AuraManager m_auraManager;
@@ -37,7 +40,6 @@ public class FootstepsAudio : MonoBehaviour
             Debug.LogError("[FOOTSTEPS] INIT No AuraManager found");
             return;
         }
-        m_auraManager.OverridePeriod();
     }
 
     public void PlayFootstepSound()
@@ -53,15 +55,13 @@ public class FootstepsAudio : MonoBehaviour
 
         if (!isLocal)
         {
-            if (m_auraManager != null)
-            {
-                m_auraManager.PlayAura();
-            }
-            else
+            if (m_auraManager == null)
             {
                 Debug.LogError("[FOOTSTEPS] No AuraManager found");
                 m_auraManager = FindAnyObjectByType<FeedbackManager>().GetAuraEffect();
+                return;
             }
+            m_auraManager.PlayAura();
         }    
 
     }
@@ -70,14 +70,15 @@ public class FootstepsAudio : MonoBehaviour
     {
         if (Vector3.Distance(StartingPosition, transform.position) > stepDistance)
         {
-            timer = 0;
             PlayFootstepSound();
+            timer = 0;
+            isStandingStill = false;
             StartingPosition = transform.position;
         }
         if (PrevPosition == transform.position && !isStandingStill)
         {
-            timer = Time.deltaTime;
-            if (timer >= 2f)
+            timer += Time.deltaTime;
+            if (timer >= StandingStillThreshold)
             {
                 timer = 0;
                 StartingPosition = transform.position;

@@ -181,7 +181,6 @@ public class FeedbackManager : NetworkBehaviour
             Debug.LogError("[GM] Aura effect not found");
             return null;
         }
-        AuraEffect.OverridePeriod();
         return AuraEffect;
     }
 }

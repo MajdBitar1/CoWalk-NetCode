@@ -6,6 +6,7 @@ using UnityEngine;
 public class SetupDummyAura : NetworkBehaviour
 {
     [SerializeField] float Speed = 3f;
+    [SerializeField] float PeriodOfPulse = 1.5f;
     [SerializeField] Transform EndPointOne, EndPointTwo;
 
     private Collider m_collider;
@@ -14,7 +15,9 @@ public class SetupDummyAura : NetworkBehaviour
 
     private Transform m_target;
 
-    //private Transform InitialLocaiton;
+
+
+    private float time = 0f;
 
     private NetworkVariable<bool> netIsActive = new NetworkVariable<bool>();
     //private bool Resetting = false;
@@ -38,15 +41,18 @@ public class SetupDummyAura : NetworkBehaviour
     {
         if (IsServer)
         {
-            //if (Resetting)
-            //{
-            //    ReturnToCenter();
-            //}
             if (!netIsActive.Value)
             {
                 return;
             }
             ServerMoveBetweenEndPoints();
+
+            time += Time.deltaTime;
+            if (time > PeriodOfPulse)
+            {
+                time = 0f;
+                m_auraManager.PlayAura();
+            }
         }
     }
 
