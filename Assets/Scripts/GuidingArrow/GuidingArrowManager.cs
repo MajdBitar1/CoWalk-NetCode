@@ -18,6 +18,7 @@ public class GuidingArrowManager : MonoBehaviour
 
     [Header("Blinking Properties")]
     [SerializeField] float MinimumBlinkingSpeed = 4f;
+    [SerializeField] float ShowingTime = 2f;
 
     private Camera vrCamera;
     private GameObject OtherPlayer;
@@ -50,10 +51,14 @@ public class GuidingArrowManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (ShowTimer == 0f)
+        if (ShowTimer <= 0f)
         {
             Arrow.SetActive(false);
+            ShowTimer = 0f;
+            return;
         }
+
+        ShowTimer -= Time.deltaTime;
 
         customTime += Time.unscaledDeltaTime;
         BlinkingMaterial.SetFloat("_CustomTime", customTime);
@@ -101,6 +106,6 @@ public class GuidingArrowManager : MonoBehaviour
 
     public void ShowArrow()
     {
-        ShowTimer = 1f;
+        ShowTimer = ShowingTime;
     }
 }

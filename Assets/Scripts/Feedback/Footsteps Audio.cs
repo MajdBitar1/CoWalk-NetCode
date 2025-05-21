@@ -15,8 +15,8 @@ public class FootstepsAudio : MonoBehaviour
     private float timer = 0;
 
 
-    [SerializeField] float stepDistance = 0.5f;
-    private float StandingStillThreshold = 2f;
+    [SerializeField] float stepDistance = 1f;
+    private float StandingStillThreshold = 3f;
 
     private bool isStandingStill = false;
     private bool isLocal = false;
@@ -65,9 +65,8 @@ public class FootstepsAudio : MonoBehaviour
                 m_feedback = FindAnyObjectByType<FeedbackManager>();
                 return;
             }
-            m_feedback.PlayFeedback();
+            m_feedback.PlayFeedback(clipcounter%2);
         }    
-
     }
 
     private void Update()
@@ -85,6 +84,7 @@ public class FootstepsAudio : MonoBehaviour
             if (timer >= StandingStillThreshold)
             {
                 timer = 0;
+                clipcounter = 0;
                 StartingPosition = transform.position;
                 isStandingStill = true;
             }

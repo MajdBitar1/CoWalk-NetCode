@@ -4,8 +4,8 @@ using UnityEngine;
 
 public struct DataToTrace
 {
-    public bool AuraState;
-    public bool Footstate;
+    public int ExperimenterState;
+
     public float SeparationDistance;
     public float SeparationAngle;
 
@@ -16,10 +16,9 @@ public struct DataToTrace
     public Vector3 ExperimenterPosition;
     public Vector3 ParticipantPosition;
 
-    public void SetStateData(bool aurastate, bool footstate)
+    public void SetStateData(int experimenterstate)
     {
-        AuraState = aurastate;
-        Footstate = footstate;
+        ExperimenterState = experimenterstate;
     }
     public void SetIndividualData(
         float experimenterspeed,

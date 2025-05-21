@@ -53,8 +53,8 @@ AudioSource:
   SpatializePostEffects: 0
   Priority: 128
   DopplerLevel: 1
-  MinDistance: 5
-  MaxDistance: 20
+  MinDistance: 2
+  MaxDistance: 15
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
@@ -158,4 +158,4 @@ MonoBehaviour:
   - {fileID: 8300000, guid: b6d884bf2a63aae438b29dab89df646b, type: 3}
   - {fileID: 8300000, guid: c5b917908f7fee74a895463fe5246eaf, type: 3}
   audioSource: {fileID: 8961690786423475405}
-  stepDistance: 1
+  stepDistance: 1.5

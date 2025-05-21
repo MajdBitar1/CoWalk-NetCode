@@ -11,7 +11,13 @@ public class VoiceChatControl : MonoBehaviour
 {
     [SerializeField] string channelToJoin = "Lobby";
 
+    [SerializeField] int MaxRange = 15;
+    [SerializeField] int ConvRange = 5;
+    [SerializeField] float RollOff = 1f;
+
     bool channelReady = false;
+
+    float Timer = 0f;
     private async void Start()
     {
         await StartUnityServices();  // Make sure Unity Services are initialized before anything else
@@ -66,10 +72,10 @@ public class VoiceChatControl : MonoBehaviour
             Debug.Log("[VIVOX] Vivox initialized and logged in");
 
             Channel3DProperties channel3DProperties = new Channel3DProperties(
-                15,    // audibility range
-                6,     // conversational range
-                1f,     // audio roll-off
-                AudioFadeModel.LinearByDistance
+                MaxRange,    // audibility range
+                ConvRange,     // conversational range
+                RollOff,     // audio roll-off
+                AudioFadeModel.ExponentialByDistance // audio fade model
             );
 
             await VivoxService.Instance.JoinPositionalChannelAsync(
@@ -87,7 +93,7 @@ public class VoiceChatControl : MonoBehaviour
         }
     }
 
-    private void LateUpdate()
+    private async void Update()
     {
         if (GameManager.LocalPlayerObject == null)
         {
@@ -95,6 +101,12 @@ public class VoiceChatControl : MonoBehaviour
         }
         if (!channelReady)
         {
+            Timer += Time.deltaTime;
+            if (Timer >= 10f)
+            {
+                Timer = 0f;
+                await StartUnityServices();
+            }
             return;
         }
 

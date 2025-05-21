@@ -65,7 +65,7 @@ public class FeedbackManager : NetworkBehaviour
         TracingState.Value = tracing;
     }
 
-    public void PlayFeedback()
+    public void PlayFeedback(int counter)
     {
         switch (StateDefined.Value)
         {
@@ -73,10 +73,13 @@ public class FeedbackManager : NetworkBehaviour
                 // No effect
                 break;
             case 1:
-                AuraFeedback();
+                if (counter == 0)
+                {
+                    AuraFeedback();
+                }
                 break;
             case 2:
-                ActivateGuidingArrow();
+                GuidingArrowFeedback();
                 break;
             default:
                 Debug.LogError("[GM] Invalid state: " + StateDefined.Value);
@@ -90,7 +93,6 @@ public class FeedbackManager : NetworkBehaviour
         {
             AuraEffect = OtherPlayer.GetComponentInChildren<AuraManager>();
         }
-        AuraEffect.GetComponent<AuraManager>().SetOtherPlayer(GameManager.LocalPlayerObject);
         AuraEffect.PlayAura();
     }
 

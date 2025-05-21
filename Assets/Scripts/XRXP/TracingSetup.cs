@@ -63,6 +63,7 @@ public class TracingSetup : MonoBehaviour
     private void UpdateTracingData()
     {
         //TracingData.SetStateData(feedbackManager.AuraState.Value, feedbackManager.AuraState.Value);
+        TracingData.SetStateData(feedbackManager.StateDefined.Value);
 
         TracingData.SetIndividualData(
             ExperimenterInfo.Speed.Value,
@@ -85,14 +86,13 @@ public class TracingSetup : MonoBehaviour
         XPXRManager.Recorder.StartSession();
         Debug.Log("[TRACINGSETUP] Start tracing");
         XPXRManager.Recorder.StartSession(environmentProperties: new Dictionary<string, string>(){
-            {"AuraState", TracingData.AuraState.ToString()},
-            {"FootState", TracingData.Footstate.ToString()},
+            {"ExperimentState", TracingData.ExperimenterState.ToString()},
             {"SeparationDistance", TracingData.SeparationDistance.ToString()},
             {"SeparationAngle", TracingData.SeparationAngle.ToString()},
             {"ExperimenterSpeed", TracingData.ExperimenterSpeed.ToString()},
             {"ParticipantSpeed", TracingData.ParticipantSpeed.ToString()},
-            {"ExperimenterFreq", TracingData.ExperimenterFreq.ToString()},
-            {"ParticipantFreq", TracingData.ParticipantFreq.ToString()},
+            //{"ExperimenterFreq", TracingData.ExperimenterFreq.ToString()},
+            //{"ParticipantFreq", TracingData.ParticipantFreq.ToString()},
             {"ExperimenterPosition", TracingData.ExperimenterPosition.ToString()},
             {"ParticipantPosition", TracingData.ParticipantPosition.ToString()}
         });

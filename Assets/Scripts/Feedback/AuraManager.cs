@@ -118,8 +118,8 @@ public class AuraManager : MonoBehaviour
                 m_AuraEffect.SetVector4("Color", ColorOnGrad);
 
                 // Scale up based on separation distance, this will ensure that the other player will see ripple effect even at high separation
-                m_AuraEffect.SetFloat("Scale", InitialScale + NormalizedDistance*10f);
-                m_AuraEffect.SetFloat("Lifetime", InitialLifeTime - NormalizedDistance);
+                m_AuraEffect.SetFloat("Scale", InitialScale + NormalizedDistance * 10f);
+                m_AuraEffect.SetFloat("Lifetime", InitialLifeTime ); // - NormalizedDistance);
                 //Finally Play the effect
                 m_AuraEffect.Play();
                 return 2;
@@ -131,7 +131,7 @@ public class AuraManager : MonoBehaviour
         {
             if (NormalizedDistance <= 0)
             {
-                AuraBroken = false;
+                //AuraBroken = false;
                 if (inView)
                 {
                     //if you can see other player, ripple effect will stop

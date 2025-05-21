@@ -84,7 +84,7 @@ public class PlayerMovementHandler : MonoBehaviour
     private void moveplayer()
     {
         Vector3 value = m_data.Speed * m_data.Direction * Time.deltaTime;
-        mecanimLegsAnimationController.armswing = new Vector3( Mathf.Clamp(value.x, MINVALUE, MAXVALUE) , 0, Mathf.Clamp(value.z, MINVALUE, MAXVALUE));
+        mecanimLegsAnimationController.armswing = new Vector3(Mathf.Lerp(MINVALUE, MAXVALUE, value.x), 0, Mathf.Lerp(MINVALUE, MAXVALUE, value.z));
         m_characterController.SimpleMove(value);
     }
 

@@ -53,16 +53,6 @@ public class UIChangesTransmitter : MonoBehaviour
         }
         feedbackManager.UpdateExperimentStateServerRpc(2);
     }
-    //public void OnToggleBlinking()
-    //{
-    //    if (!BlinkingLight.isOn)
-    //    {
-    //        feedbackManager.UpdateExperimentStateServerRpc(0);
-    //    }
-    //    feedbackManager.UpdateExperimentStateServerRpc(3);
-    //    resetAll();
-    //    BlinkingLight.isOn = true;
-    //}
 
     public void OnToggleTracing()
     {
@@ -74,7 +64,6 @@ public class UIChangesTransmitter : MonoBehaviour
         try
         {
             Aura.isOn = false;
-            //BlinkingLight.isOn = false;
             GuidingArrow.isOn = false;
         }
         catch (System.Exception e)
