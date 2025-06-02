@@ -19,6 +19,7 @@ public class FeedbackManager : NetworkBehaviour
     private GameObject OtherPlayer;
 
     private int prevValue;
+    private bool prevTracing;
 
     public override void OnNetworkSpawn()
     {
@@ -31,8 +32,8 @@ public class FeedbackManager : NetworkBehaviour
         }
         else
         {
-            TracingState.OnValueChanged += TracingStateUpdated;
             StateDefined.OnValueChanged += ExperimentStateChanged;
+            TracingState.OnValueChanged += TracingStateUpdated;
             DeactivateAllStates();
             prevValue = 0;
         }
@@ -111,7 +112,13 @@ public class FeedbackManager : NetworkBehaviour
         {
             ApplyStateChange();
         }
+        if (prevTracing != TracingState.Value)
+        {
+            Debug.Log("[TRACING] Tracing State Change Detected Inside LateUpdate");
+            UpdateTracing();
+        }
         prevValue = StateDefined.Value;
+        prevTracing = TracingState.Value;
     }
 
     private void ApplyStateChange()
@@ -153,8 +160,8 @@ public class FeedbackManager : NetworkBehaviour
         {
             AuraEffect = OtherPlayer.GetComponentInChildren<AuraManager>();
         }
-        AuraEffect.isActive = true;
         AuraEffect.GetComponent<AuraManager>().SetOtherPlayer(GameManager.LocalPlayerObject);
+        AuraEffect.isActive = true;
         Debug.Log("[GM] Aura activated");
     }
 
@@ -169,8 +176,14 @@ public class FeedbackManager : NetworkBehaviour
 
     private void TracingStateUpdated(bool previous, bool current)
     {
-        Debug.Log("[GM] Tracing state changed from " + previous + " to " + current);
-        if (current)
+        Debug.Log("[TRACING] Tracing State Change Detected EVENT");
+        TracingState.Value = current;
+        UpdateTracing();
+    }
+
+    private void UpdateTracing()
+    {
+        if (TracingState.Value)
         {
             Tracer.InitiateTracing();
         }

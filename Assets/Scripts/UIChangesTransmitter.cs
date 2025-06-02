@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,23 +13,25 @@ public class UIChangesTransmitter : MonoBehaviour
     [SerializeField] Toggle Aura;
     [SerializeField] Toggle GuidingArrow;
     [SerializeField] Toggle Tracing;
-    //[SerializeField] Toggle BlinkingLight;
 
     [Header("Local Stats")]
     [SerializeField] TextMeshProUGUI LocalSpeed;
-    [SerializeField] TextMeshProUGUI LocalFreq;
+    [SerializeField] TextMeshProUGUI LocalRealSpeed;
 
     [Header("Remote Stats")]
     [SerializeField] TextMeshProUGUI RemoteSpeed;
-    [SerializeField] TextMeshProUGUI RemoteFreq;
+    [SerializeField] TextMeshProUGUI RemoteRealSpeed;
 
     [Header("Group Stats")]
     [SerializeField] TextMeshProUGUI GroupSeparationDistance;
     [SerializeField] TextMeshProUGUI GroupAngleDifference;
 
-    private PlayerNetworkInfo m_localinfo, m_remoteinfo;
+    [Header("Cooldown Duration")]
+    [SerializeField] float CooldownDuration = 5f;
 
+    private PlayerNetworkInfo m_localinfo, m_remoteinfo;
     private Vector3 LocalPrevPosition, RemotePrevPosition;
+    private bool TwoToggleSafeFlag = false;
 
 
     private void Start()
@@ -36,40 +39,56 @@ public class UIChangesTransmitter : MonoBehaviour
         feedbackManager = FindAnyObjectByType<FeedbackManager>();
         LocalPrevPosition = Vector3.zero;
         RemotePrevPosition = Vector3.zero;
-    }
-    public void OnToggleAura()
-    {
-        if (!Aura.isOn)
-        {
-            feedbackManager.UpdateExperimentStateServerRpc(0);
-        }
-        feedbackManager.UpdateExperimentStateServerRpc(1);
-    }
-    public void OnToggleArrow()
-    {
-        if (!GuidingArrow.isOn)
-        {
-            feedbackManager.UpdateExperimentStateServerRpc(0);
-        }
-        feedbackManager.UpdateExperimentStateServerRpc(2);
-    }
 
-    public void OnToggleTracing()
-    {
-        feedbackManager.UpdateTracingStateServerRpc(Tracing.isOn);
+        Aura.onValueChanged.AddListener(OnToggleAura);
+        GuidingArrow.onValueChanged.AddListener(OnToggleArrow);
+        Tracing.onValueChanged.AddListener(OnToggleTracing);
     }
-
-    private void resetAll()
+    public void OnToggleAura(bool isOn)
     {
-        try
+        if (TwoToggleSafeFlag) return;
+        if (isOn)
         {
-            Aura.isOn = false;
+            //Raise The Safety Flag and Turn off The Arrow
+            TwoToggleSafeFlag = true;
             GuidingArrow.isOn = false;
+            TwoToggleSafeFlag = false;
+            feedbackManager.UpdateExperimentStateServerRpc(1);
         }
-        catch (System.Exception e)
+        else
         {
-            Debug.LogError("[UIChangesTransmitter] Error resetting toggles: " + e.Message);
+            feedbackManager.UpdateExperimentStateServerRpc(0);
         }
+
+    }
+    public void OnToggleArrow(bool isOn)
+    {
+        if (TwoToggleSafeFlag) return;
+        if (isOn)
+        {
+            //Raise The Safety Flag and Turn off The Aura
+            TwoToggleSafeFlag = true;
+            Aura.isOn = false;
+            TwoToggleSafeFlag = false;
+            feedbackManager.UpdateExperimentStateServerRpc(2);
+        }
+        else
+        {
+            feedbackManager.UpdateExperimentStateServerRpc(0);
+        }
+    }
+
+    public void OnToggleTracing(bool isOn)
+    {
+        feedbackManager.UpdateTracingStateServerRpc(isOn);
+        StartCoroutine(ReenableToggleAfterDelay(CooldownDuration));
+    }
+
+    IEnumerator ReenableToggleAfterDelay(float delay)
+    {
+        Tracing.interactable = false;
+        yield return new WaitForSeconds(delay);
+        Tracing.interactable = true;
     }
 
     private void LateUpdate()
@@ -94,7 +113,7 @@ public class UIChangesTransmitter : MonoBehaviour
     {
         float DistanceCovered = Vector3.Distance(m_localinfo.transform.position, LocalPrevPosition);
         float Velocity = Mathf.Round(DistanceCovered * 100 / Time.fixedDeltaTime) / 100;
-        LocalFreq.text = Velocity.ToString();
+        LocalRealSpeed.text = Velocity.ToString();
         LocalPrevPosition = m_localinfo.transform.position;
     }
 
@@ -112,7 +131,7 @@ public class UIChangesTransmitter : MonoBehaviour
     {
         float DistanceCovered = Vector3.Distance(m_remoteinfo.transform.position, RemotePrevPosition);
         float RemoteVelo = Mathf.Round(DistanceCovered * 100 / Time.fixedDeltaTime) / 100;
-        RemoteFreq.text = RemoteVelo.ToString();
+        RemoteRealSpeed.text = RemoteVelo.ToString();
         RemotePrevPosition = m_remoteinfo.transform.position;
     }
 

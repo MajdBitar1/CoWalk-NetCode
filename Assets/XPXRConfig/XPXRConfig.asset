@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: XPXRConfig
   m_EditorClassIdentifier: 
   LocalStorageMode: 0
-  OnlineMode: 1
+  OnlineMode: 0
   BackUpStorageMode: 1
   AuthorizationToken: 
   WebSocketServer: 

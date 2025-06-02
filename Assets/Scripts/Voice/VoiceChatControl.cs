@@ -23,7 +23,7 @@ public class VoiceChatControl : MonoBehaviour
         await StartUnityServices();  // Make sure Unity Services are initialized before anything else
     }
 
-    private async Task StartUnityServices()
+    async Task StartUnityServices()
     {
         try
         {
@@ -62,7 +62,7 @@ public class VoiceChatControl : MonoBehaviour
         }
     }
 
-    private async Task InitializeVivoxAndJoinChannel()
+    async Task InitializeVivoxAndJoinChannel()
     {
         try
         {
@@ -93,9 +93,9 @@ public class VoiceChatControl : MonoBehaviour
         }
     }
 
-    private async void Update()
+    async void Update()
     {
-        if (GameManager.LocalPlayerObject == null)
+        if (GameManager.LocalPlayerObject == null || GameManager.RemotePlayerObject)
         {
             return;
         }
@@ -110,8 +110,14 @@ public class VoiceChatControl : MonoBehaviour
             return;
         }
 
+        Transform remotePlayerTrans = GameManager.RemotePlayerObject.transform;
+        Transform localPlayerTrans = GameManager.LocalPlayerObject.transform;
+
         VivoxService.Instance.Set3DPosition(
-            GameManager.LocalPlayerObject,  // Player's position
+            localPlayerTrans.position, // speaker position
+            remotePlayerTrans.position, // listener position
+            remotePlayerTrans.forward, // listener at orientation
+            remotePlayerTrans.up, // listener up orientation
             channelToJoin
         );
     }

@@ -13,12 +13,16 @@ public struct DataToTrace
     public float ParticipantSpeed;
     public float ExperimenterFreq;
     public float ParticipantFreq;
-    public Vector3 ExperimenterPosition;
-    public Vector3 ParticipantPosition;
+
+    public Transform ExperimenterTransform;
+    public Transform ParticipantTransform;
+
+    public Vector3 ExperimenterDirection;
+    public Vector3 ParticipantDirection;
 
     public void SetStateData(int experimenterstate)
     {
-        ExperimenterState = experimenterstate;
+        this.ExperimenterState = experimenterstate;
     }
     public void SetIndividualData(
         float experimenterspeed,
@@ -27,22 +31,25 @@ public struct DataToTrace
         float participantfreq
         )
     {
-        ExperimenterSpeed = experimenterspeed;
-        ParticipantSpeed = participantspeed;
-        ExperimenterFreq = experimenterfreq;
-        ParticipantFreq = participantfreq;
+        this.ExperimenterSpeed = experimenterspeed;
+        this.ParticipantSpeed = participantspeed;
+        this.ExperimenterFreq = experimenterfreq;
+        this.ParticipantFreq = participantfreq;
     }
 
     public void SetPositionData(
-        Vector3 experimenterposition,
-        Vector3 participantposition,
+        Transform experimenterTransform,
+        Transform participantTransform,
         Vector3 ExperimenterDirection,
         Vector3 ParticipantDirection
         )
     {
-        ExperimenterPosition = experimenterposition;
-        ParticipantPosition = participantposition;
-        SeparationDistance = Vector3.Distance(experimenterposition, participantposition);
-        SeparationAngle = Vector3.Angle(ExperimenterDirection, ParticipantDirection);
+        this.ExperimenterTransform = experimenterTransform;
+        this.ParticipantTransform = participantTransform;
+        this.ExperimenterDirection = ExperimenterDirection;
+        this.ParticipantDirection = ParticipantDirection;
+
+        this.SeparationDistance = Vector3.Distance(experimenterTransform.position, participantTransform.position);
+        this.SeparationAngle = Vector3.Angle(ExperimenterDirection, ParticipantDirection);
     }
 }

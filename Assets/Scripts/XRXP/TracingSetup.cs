@@ -2,14 +2,21 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
+using XPXR.Recorder.Models;
 
 public class TracingSetup : MonoBehaviour
 {
     [SerializeField] FeedbackManager feedbackManager;
     private DataToTrace TracingData;
-    private PlayerNetworkInfo ExperimenterInfo, ParticipantInfo;
-    bool isRecording = false;
+    private PlayerNetworkInfo LocalPlayerInfo, RemotePlayerInfo;
+    bool isRecording;
 
+    public bool DEBUG = false;
+
+    private float Timer = 0f;
+
+    public float LoggingPeriod = 0.5f;
     // Start is called before the first frame update
     void Start()
     {
@@ -18,11 +25,18 @@ public class TracingSetup : MonoBehaviour
 
     public void InitiateTracing()
     {
+        //if (SetupDataSources() < 0)
+        //{
+        //    Debug.LogError("[TRACING] Data sources not set up yet");
+        //    return;
+        //}
+
         if (isRecording)
         {
             return;
         }
-        Debug.Log("[Tracing] Initiating tracing");
+        SetupDataSources();
+        Debug.Log("[TRACING] Initiating tracing");
         StartCoroutine(BeginTracingRoutine());
     }
 
@@ -32,52 +46,81 @@ public class TracingSetup : MonoBehaviour
         {
             return;
         }
-        Debug.Log("[Tracing] End tracing");
+        Debug.Log("[TRACING] End tracing");
         StartCoroutine(EndTracingRoutine());
     }
 
     private int SetupDataSources()
     {
-        if (ExperimenterInfo == null || ParticipantInfo == null)
+        int value = 0;
+        if (LocalPlayerInfo == null)
         {
-            ExperimenterInfo = GameManager.LocalPlayerObject?.GetComponent<PlayerNetworkInfo>();
-            ParticipantInfo = GameManager.RemotePlayerObject?.GetComponent<PlayerNetworkInfo>();
-            return -1;
+            LocalPlayerInfo = GameManager.LocalPlayerObject?.GetComponent<PlayerNetworkInfo>();
+            value ++;
         }
-        return 1;
+        if (RemotePlayerInfo == null)
+        {
+            RemotePlayerInfo = GameManager.RemotePlayerObject?.GetComponent<PlayerNetworkInfo>();
+            value ++;
+        }
+        return value;
     }
 
-    private void Update()
+    private void LateUpdate()
     {
-        if (isRecording)
+        Timer += Time.deltaTime;
+        if (Timer >= LoggingPeriod)
         {
-            if (SetupDataSources()<0)
+            Timer = 0f;
+            if (isRecording)
             {
-                Debug.LogError("[TRACINGSETUP] Data sources not set up yet");
-                return;
+                UpdateTracingData();
+                LogTracingData();
             }
-            UpdateTracingData();
         }
-    }   
+    }  
 
     private void UpdateTracingData()
     {
-        //TracingData.SetStateData(feedbackManager.AuraState.Value, feedbackManager.AuraState.Value);
         TracingData.SetStateData(feedbackManager.StateDefined.Value);
 
         TracingData.SetIndividualData(
-            ExperimenterInfo.Speed.Value,
-            ExperimenterInfo.CycleDuration.Value,
-            ParticipantInfo.Speed.Value,
-            ParticipantInfo.CycleDuration.Value
+            LocalPlayerInfo.Speed.Value,
+            LocalPlayerInfo.CycleDuration.Value,
+            RemotePlayerInfo.Speed.Value,
+            RemotePlayerInfo.CycleDuration.Value
             );
 
         TracingData.SetPositionData(
-            ExperimenterInfo.transform.position,
-            ParticipantInfo.transform.position,
-            ExperimenterInfo.Direction.Value,
-            ParticipantInfo.Direction.Value
+            LocalPlayerInfo.transform,
+            RemotePlayerInfo.transform,
+            LocalPlayerInfo.Direction.Value,
+            RemotePlayerInfo.Direction.Value
             );
+    }
+
+    private void LogTracingData()
+    {
+        XPXRManager.Recorder.AddInternalEvent(XPXR.Recorder.Models.SystemType.QuantitativeValue, "LocalPlayerData", "LocalSpeed", 
+            new QuantitativeValue(TracingData.ExperimenterSpeed));
+
+        //XPXRManager.Recorder.AddInternalEvent(XPXR.Recorder.Models.SystemType.QuantitativeValue, "LocalPlayerData", "LocalRealSpeed",
+        //    new QuantitativeValue(TracingData.ExperimenterFreq));
+
+        XPXRManager.Recorder.AddInternalEvent(XPXR.Recorder.Models.SystemType.WorldPosition, "LocalPlayerData", "LocalPosition",
+            new WorldPosition(TracingData.ExperimenterTransform.position, TracingData.ExperimenterTransform.rotation));
+
+        XPXRManager.Recorder.AddInternalEvent(XPXR.Recorder.Models.SystemType.QuantitativeValue, "RemotePlayerData", "RemoteSpeed",
+            new QuantitativeValue(TracingData.ParticipantSpeed));
+
+        XPXRManager.Recorder.AddInternalEvent(XPXR.Recorder.Models.SystemType.WorldPosition, "RemotePlayerData", "RemotePosition", 
+            new WorldPosition(TracingData.ParticipantTransform.position, TracingData.ParticipantTransform.rotation));
+
+        XPXRManager.Recorder.AddInternalEvent(XPXR.Recorder.Models.SystemType.QuantitativeValue, "GroupData", "SeparationDistance",
+            new QuantitativeValue(TracingData.SeparationDistance));
+
+        XPXRManager.Recorder.AddInternalEvent(XPXR.Recorder.Models.SystemType.QuantitativeValue, "GroupData", "SeparationAngle",
+            new QuantitativeValue(TracingData.SeparationAngle));
     }
 
     private IEnumerator BeginTracingRoutine()
@@ -85,32 +128,31 @@ public class TracingSetup : MonoBehaviour
         isRecording = true;
         XPXRManager.Recorder.StartSession();
         Debug.Log("[TRACINGSETUP] Start tracing");
-        XPXRManager.Recorder.StartSession(environmentProperties: new Dictionary<string, string>(){
-            {"ExperimentState", TracingData.ExperimenterState.ToString()},
-            {"SeparationDistance", TracingData.SeparationDistance.ToString()},
-            {"SeparationAngle", TracingData.SeparationAngle.ToString()},
-            {"ExperimenterSpeed", TracingData.ExperimenterSpeed.ToString()},
-            {"ParticipantSpeed", TracingData.ParticipantSpeed.ToString()},
-            //{"ExperimenterFreq", TracingData.ExperimenterFreq.ToString()},
-            //{"ParticipantFreq", TracingData.ParticipantFreq.ToString()},
-            {"ExperimenterPosition", TracingData.ExperimenterPosition.ToString()},
-            {"ParticipantPosition", TracingData.ParticipantPosition.ToString()}
-        });
+        //XPXRManager.Recorder.StartSession(environmentProperties: new Dictionary<string, string>(){
+        //    {"ExperimentState", TracingData.ExperimenterState.ToString()},
+        //    {"SeparationDistance", TracingData.SeparationDistance.ToString()},
+        //    {"SeparationAngle", TracingData.SeparationAngle.ToString()},
+        //    {"ExperimenterSpeed", TracingData.ExperimenterSpeed.ToString()},
+        //    {"ParticipantSpeed", TracingData.ParticipantSpeed.ToString()},
+        //    //{"ExperimenterFreq", TracingData.ExperimenterFreq.ToString()},
+        //    //{"ParticipantFreq", TracingData.ParticipantFreq.ToString()},
+        //    {"ExperimenterPosition", TracingData.ExperimenterTransform.ToString()},
+        //    {"ParticipantPosition", TracingData.ParticipantTransform.ToString()}
+        //});
         yield return new WaitForSeconds(1f);
     }
 
     private IEnumerator EndTracingRoutine()
     {
-        XPXRManager.Recorder.StopSession();
+        isRecording = false;
         yield return new WaitForSeconds(1f);
         XPXRManager.Recorder.StopSession();
-        Debug.Log("[TRACINGSETUP] End of the trial");
+
         while (XPXRManager.Recorder.TransfersState() != 0)
         {
             yield return new WaitForSeconds(1);
         }
         XPXRManager.Recorder.EndTracing();
-        isRecording = false;
-        Debug.Log("End of the record");
+        Debug.Log("[TRACING] End of the record");
     }
 }

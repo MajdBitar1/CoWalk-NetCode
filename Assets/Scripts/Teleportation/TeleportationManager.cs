@@ -7,6 +7,7 @@ public class TeleportationManager : NetworkBehaviour
     public NetworkVariable<bool> m_playerOneReady = new NetworkVariable<bool>();
     public NetworkVariable<bool> m_playerTwoReady = new NetworkVariable<bool>();
     [SerializeField] private GameObject _StartingArea;
+    [SerializeField] TracingSetup tracingSetup;
 
 
     private bool ExperimenterReadyViz = false;
@@ -73,6 +74,7 @@ public class TeleportationManager : NetworkBehaviour
     IEnumerator TeleportPlayers()
     {
         yield return new WaitForSeconds(2.0f);
+        tracingSetup.InitiateTracing();
         _StartingArea.SetActive(false);
     }
 
