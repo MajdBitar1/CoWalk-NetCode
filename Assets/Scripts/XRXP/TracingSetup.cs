@@ -17,19 +17,24 @@ public class TracingSetup : MonoBehaviour
     private float Timer = 0f;
 
     public float LoggingPeriod = 0.5f;
+
+    private int currentState = 0;
     // Start is called before the first frame update
     void Start()
     {
         isRecording = false;
     }
 
+    private void OnApplicationQuit()
+    {
+        if (isRecording)
+        {
+            EndTracing();
+        }
+    }
+
     public void InitiateTracing()
     {
-        //if (SetupDataSources() < 0)
-        //{
-        //    Debug.LogError("[TRACING] Data sources not set up yet");
-        //    return;
-        //}
 
         if (isRecording)
         {
@@ -104,9 +109,6 @@ public class TracingSetup : MonoBehaviour
         XPXRManager.Recorder.AddInternalEvent(XPXR.Recorder.Models.SystemType.QuantitativeValue, "LocalPlayerData", "LocalSpeed", 
             new QuantitativeValue(TracingData.ExperimenterSpeed));
 
-        //XPXRManager.Recorder.AddInternalEvent(XPXR.Recorder.Models.SystemType.QuantitativeValue, "LocalPlayerData", "LocalRealSpeed",
-        //    new QuantitativeValue(TracingData.ExperimenterFreq));
-
         XPXRManager.Recorder.AddInternalEvent(XPXR.Recorder.Models.SystemType.WorldPosition, "LocalPlayerData", "LocalPosition",
             new WorldPosition(TracingData.ExperimenterTransform.position, TracingData.ExperimenterTransform.rotation));
 
@@ -121,6 +123,9 @@ public class TracingSetup : MonoBehaviour
 
         XPXRManager.Recorder.AddInternalEvent(XPXR.Recorder.Models.SystemType.QuantitativeValue, "GroupData", "SeparationAngle",
             new QuantitativeValue(TracingData.SeparationAngle));
+
+        XPXRManager.Recorder.AddInternalEvent(XPXR.Recorder.Models.SystemType.QuantitativeValue, "PHASE STATE", "CurrentState",
+            new QuantitativeValue(feedbackManager.StateDefined.Value));
     }
 
     private IEnumerator BeginTracingRoutine()

@@ -65,7 +65,6 @@ public class TeleportationManager : NetworkBehaviour
         UpdateParticipantArea(m_playerTwoReady.Value);
         if (m_playerOneReady.Value && m_playerTwoReady.Value)
         {
-            // USE A TIMER TO TELEPORT PLAYERS
             Debug.Log("Both players are ready");
             StartCoroutine(TeleportPlayers());
         }

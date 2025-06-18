@@ -14,23 +14,26 @@ public class GameManager : Singleton<GameManager>
     public static List<GameObject> PlayerRefList = new List<GameObject>();
     public static GameObject origin;
     public static GameObject LocalPlayerObject, RemotePlayerObject;
-    public static GameObject Experimenter, Participant;
+    public static GameObject Experimenter;
 
     private int previousPlayerCount = 0;
 
     [SerializeField] private AudioMixer AudioMixer;
 
+    public override void Awake()
+    {
+        base.Awake();
+        Application.runInBackground = true;
+    }
     public override void OnNetworkDespawn()
     {
-        // Clean up the PlayerRefList when the GameManager is destroyed
         PlayerRefList.Clear();
     }
 
-    void FixedUpdate()
+    private void FixedUpdate()
     {
         CheckPlayerCount();
     }
-
     void CheckPlayerCount()
     {
         AvatarEntity[] avatarentities = FindObjectsByType<AvatarEntity>(FindObjectsSortMode.None);
@@ -78,7 +81,6 @@ public class GameManager : Singleton<GameManager>
     public void DefineParticipant(GameObject playerobj)
     {
         Debug.Log("[GM] Participant Defined: " + LocalPlayerObject.name);
-        Participant = LocalPlayerObject;
     }
 
     public AudioMixer GetAudioMixer()

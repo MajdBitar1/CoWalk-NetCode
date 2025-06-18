@@ -4,6 +4,7 @@ public class ExperimenterManager : MonoBehaviour
 {
     [SerializeField] GameObject toggleMenu, statsMenu;
     [SerializeField] GameObject LeftHandRay, RightHandRay;
+    [SerializeField] TeleportationManager m_tpManager;
     private int state = -1;
 
     private void Start()
@@ -13,21 +14,26 @@ public class ExperimenterManager : MonoBehaviour
         LeftHandRay.SetActive(false);
         RightHandRay.SetActive(false);
         state = -1;
-
-        //Debug
-        //ShowAll();
     }
 
     private void Update()
     {
-        if (OVRInput.GetUp(OVRInput.Button.Two)) // && GameManager.Experimenter == GameManager.LocalPlayerObject
+        if (GameManager.Experimenter == GameManager.LocalPlayerObject)
         {
-            state++;
-            if (state>2)
+            if (OVRInput.Get(OVRInput.Axis1D.PrimaryHandTrigger) > 0.1f)
             {
-                state = -1;
+                m_tpManager.SetPlayerOneReadyServerRpc(true);
+                m_tpManager.SetPlayerTwoReadyServerRpc(true);
             }
-            UpdateState(state);
+            if (OVRInput.GetUp(OVRInput.Button.Two))
+            {
+                state++;
+                if (state > 2)
+                {
+                    state = -1;
+                }
+                UpdateState(state);
+            }
         }
     }
 

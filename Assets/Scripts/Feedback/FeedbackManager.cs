@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Audio;
+using System;
 
 public class FeedbackManager : NetworkBehaviour
 {
@@ -21,6 +22,7 @@ public class FeedbackManager : NetworkBehaviour
     private int prevValue;
     private bool prevTracing;
 
+    public static event Action<int> onStateChange;
     public override void OnNetworkSpawn()
     {
         if (IsServer)
