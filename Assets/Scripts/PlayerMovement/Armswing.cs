@@ -1,167 +1,207 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-[RequireComponent(typeof(PlayerMovementHandler))]
+
 public class Armswing : MonoBehaviour
 {
+    #region Constants
+    private const float FRICTION_MULTIPLIER = 0.9f;
+    private const float FRICTION_SPEED_FACTOR = 2f;
+    private const float MOVEMENT_AMPLIFIER_FACTOR = 2f;
+    private const float SIDE_MOVEMENT_THRESHOLD = 0.5f;
+    #endregion
+
+    #region Inspector Fields
+    [Header("Player Object References")]
+    [SerializeField] private GameObject leftHand;
+    [SerializeField] private GameObject rightHand;
+    [SerializeField] private GameObject head;
+    [SerializeField] private GameObject hips;
+
+    [Header("Movement Tuning")]
+    [SerializeField] private float movementAmplifier = 150f;
+    [SerializeField] private float friction = 1f;
+    [SerializeField] private float minimumSpeedThreshold = 150f;
+    [SerializeField] private float maximumSpeedThreshold = 500f;
+
+    [Header("Smoothing")]
+    [SerializeField] private int bufferWindowSize = 60;
+    #endregion
+
+    #region Private Fields
+    // Position tracking
+    private Vector3 previousLeftHandPosition;
+    private Vector3 previousRightHandPosition;
+    private Vector3 previousPlayerPosition;
+    private Vector3 currentPlayerPosition;
+
+    // Direction vectors
+    private Vector3 hipDirection;
+    private Vector3 headDirection;
+
+    // Speed calculations
+    private float currentSpeed;
+    private float previousSpeed;
+    private float leftHandDistance;
+    private float rightHandDistance;
+    private float finalPlayerSpeed;
+
+    // Smoothing
+    private Queue<float> speedBuffer = new Queue<float>();
+    #endregion
+
+    #region Unity Lifecycle
+    private void Start()
+    {
+        InitializeArmswingSystem();
+        InitializeSpeedBuffer();
+    }
+
+    private void Update()
+    {
+        finalPlayerSpeed = CalculateSmoothedMovement();
+    }
+    #endregion
+
+    #region Public Interface
     /// <summary>
-    /// 
+    /// Gets the current player movement data including position, direction, and speed
     /// </summary>
-    [Header("Player Obj Ref")]
-    [SerializeField] GameObject _Lefthand;
-    [SerializeField] GameObject _RightHand;
-    [SerializeField] GameObject _Head;
-    [SerializeField] GameObject _Hips;
-
-    [Header("Tuning Parameters")]
-    [SerializeField] float MovementAmplifier = 1;
-    [SerializeField] float friction = 1f;
-    [SerializeField] float MinimumPlayerSpeedThreshold = 0.2f;
-    [SerializeField] float MaximumPlayerSpeedThreshold = 100f;
-
-    [Header("Smoothing Movement")]
-    [SerializeField] int BufferWindow = 30;
-
-    Vector3 prevPosLeft, prevPosRight;
-    Vector3 HipDirection,HeadDirection;
-    Vector3 PlayerCurrentPosition, PlayerPreviousFramePosition;
-
-    float playerspeed;
-    float playerprevspeed;
-    float LeftDistanceMoved = 0;
-    float RightDistanceMoved = 0;
-    float FinalPlayerSpeed = 0;
-
-    Queue<float> SpeedQueue = new Queue<float>();
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        //_Hips = null;
-        InitializeSwinger();
-
-        //Initialize the stack with zeroes
-        for (int i = 0; i < BufferWindow; i++)
-        {
-            SpeedQueue.Enqueue(0);
-        }
-    }
-
-    void Update()
-    {
-        UpdatePlayerMovement();
-    }
-
     public PlayerMovementData GetSpeedFromSwings()
     {
-        return new PlayerMovementData(transform.position, HipDirection, FinalPlayerSpeed, 1);
+        return new PlayerMovementData(transform.position, hipDirection, finalPlayerSpeed, 1);
     }
+    #endregion
 
-
-    private void UpdatePlayerMovement()
+    #region Initialization
+    private void InitializeArmswingSystem()
     {
-        FinalPlayerSpeed = SmoothMovement(ComputeMovement());
+        if (!ValidateReferences()) return;
+
+        headDirection = head.transform.forward.normalized;
+        previousPlayerPosition = transform.localPosition;
+        previousLeftHandPosition = leftHand.transform.localPosition;
+        previousRightHandPosition = rightHand.transform.localPosition;
+        
+        currentSpeed = 0f;
+        previousSpeed = 0f;
     }
 
-
-    private void InitializeSwinger()
+    private void InitializeSpeedBuffer()
     {
-        HeadDirection = _Head.gameObject.transform.forward.normalized;
-        PlayerPreviousFramePosition = transform.localPosition;
-        prevPosLeft = _Lefthand.transform.localPosition;
-        prevPosRight = _RightHand.transform.localPosition;
-        playerspeed = 0;
-        playerprevspeed = 0;
+        speedBuffer.Clear();
+        for (int i = 0; i < bufferWindowSize; i++)
+        {
+            speedBuffer.Enqueue(0f);
+        }
     }
 
-
-    private float ComputeMovement()
+    private bool ValidateReferences()
     {
-        if (_Hips == null)
+        if (leftHand == null || rightHand == null || head == null || hips == null)
         {
-            return 0;
+            Debug.LogError("Missing required GameObject references in Armswing component!");
+            return false;
         }
-        //Update Position
-        PlayerCurrentPosition = transform.localPosition;
-        //Define Direction
-        HeadDirection = _Head.gameObject.transform.forward.normalized;
-        HipDirection = _Hips.gameObject.transform.forward.normalized;
-
-        Vector3 NormalVec = Vector3.Cross(HipDirection, Vector3.up).normalized;
-
-        LeftDistanceMoved = ComputeLeftHandMovement(NormalVec);
-        RightDistanceMoved = ComputeRightHandMovement(NormalVec);
-
-        float playerDistanceMoved = Vector3.Distance(PlayerCurrentPosition, PlayerPreviousFramePosition);
-
-        float totalmovement = (LeftDistanceMoved + RightDistanceMoved)*MovementAmplifier - 2 * playerDistanceMoved;
-
-        playerspeed = playerprevspeed * (0.9f - friction * playerprevspeed) + totalmovement;
-        float misalignment = Vector3.Dot(HipDirection, HeadDirection);
-
-
-        //Reduce Speed For these conditions
-        if (playerspeed < MinimumPlayerSpeedThreshold)
-        {
-            playerspeed = 0;
-        }
-
-        if (playerspeed > MaximumPlayerSpeedThreshold)
-        {
-            playerspeed = MaximumPlayerSpeedThreshold;
-        }
-
-
-        //Setup parameters for next frame
-        prevPosLeft = _Lefthand.transform.localPosition;
-        prevPosRight = _RightHand.transform.localPosition;
-        PlayerPreviousFramePosition = PlayerCurrentPosition;
-        playerprevspeed = playerspeed;
-
-        //Debug.Log($"Total Speed: {playerspeed}");
-        return playerspeed;
+        return true;
     }
-    private float SmoothMovement(float currentspeed)
+    #endregion
+
+    #region Movement Calculation
+    private float CalculateSmoothedMovement()
     {
-        if (SpeedQueue.Count >= BufferWindow)
-        {
-            SpeedQueue.Dequeue();
-        }
-        SpeedQueue.Enqueue(currentspeed);
-        float averagespeed = SpeedQueue.Sum() / BufferWindow;
-        return averagespeed;
+        float rawMovement = CalculateRawMovement();
+        return ApplySmoothing(rawMovement);
     }
 
-    private float ComputeLeftHandMovement(Vector3 NormalVec)
+    private float CalculateRawMovement()
     {
-        Vector3 CurrentLeftPos = new Vector3(_Lefthand.transform.localPosition.x, 0, _Lefthand.transform.localPosition.z);
-        Vector3 DeltaLeftHand = _Lefthand.transform.localPosition - prevPosLeft;
+        if (hips == null) return 0f;
 
-        float LeftDistanceMoved = Mathf.Abs( Vector3.Dot(DeltaLeftHand, HipDirection) );
+        UpdatePositionsAndDirections();
+        
+        Vector3 sideVector = CalculateSideVector();
+        leftHandDistance = CalculateHandMovement(leftHand, previousLeftHandPosition, sideVector);
+        rightHandDistance = CalculateHandMovement(rightHand, previousRightHandPosition, sideVector);
 
-        if ( Vector3.Dot(NormalVec, DeltaLeftHand.normalized) >= 0.5)
-        {
-            LeftDistanceMoved = 0;
-        }
-        LeftDistanceMoved = LeftDistanceMoved / Time.deltaTime;
+        float playerMovementDistance = Vector3.Distance(currentPlayerPosition, previousPlayerPosition);
+        float totalHandMovement = (leftHandDistance + rightHandDistance) * movementAmplifier;
+        float adjustedMovement = totalHandMovement - (MOVEMENT_AMPLIFIER_FACTOR * playerMovementDistance);
 
-        return LeftDistanceMoved;
+        currentSpeed = CalculateSpeedWithFriction(adjustedMovement);
+        currentSpeed = ApplySpeedLimits(currentSpeed);
+
+        UpdatePreviousFrameData();
+
+        return currentSpeed;
     }
 
-    private float ComputeRightHandMovement(Vector3 NormalVec)
+    private void UpdatePositionsAndDirections()
     {
-        Vector3 CurrentRightPos = new Vector3(_RightHand.transform.localPosition.x, 0, _RightHand.transform.localPosition.z);
-        Vector3 DeltaRightHand = _RightHand.transform.localPosition - prevPosRight;
-
-        float RightDistanceMoved = Mathf.Abs( Vector3.Dot(DeltaRightHand, HipDirection));
-
-        if (Vector3.Dot(NormalVec, DeltaRightHand.normalized) >= 0.5)
-        {
-            RightDistanceMoved = 0;
-        }
-        RightDistanceMoved = RightDistanceMoved / Time.deltaTime;
-
-        return RightDistanceMoved;
+        currentPlayerPosition = transform.localPosition;
+        headDirection = head.transform.forward.normalized;
+        hipDirection = hips.transform.forward.normalized;
     }
+
+    private Vector3 CalculateSideVector()
+    {
+        return Vector3.Cross(hipDirection, Vector3.up).normalized;
+    }
+
+    private float CalculateSpeedWithFriction(float movement)
+    {
+        return previousSpeed * (FRICTION_MULTIPLIER - friction * previousSpeed) + movement;
+    }
+
+    private float ApplySpeedLimits(float speed)
+    {
+        if (speed < minimumSpeedThreshold)
+            return 0f;
+        
+        return Mathf.Min(speed, maximumSpeedThreshold);
+    }
+
+    private void UpdatePreviousFrameData()
+    {
+        previousLeftHandPosition = leftHand.transform.localPosition;
+        previousRightHandPosition = rightHand.transform.localPosition;
+        previousPlayerPosition = currentPlayerPosition;
+        previousSpeed = currentSpeed;
+    }
+    #endregion
+
+    #region Hand Movement Calculation
+    private float CalculateHandMovement(GameObject hand, Vector3 previousPosition, Vector3 sideVector)
+    {
+        Vector3 handDelta = hand.transform.localPosition - previousPosition;
+        float forwardMovement = Mathf.Abs(Vector3.Dot(handDelta, hipDirection));
+
+        // Ignore sideways movement
+        if (IsSidewaysMovement(handDelta, sideVector))
+        {
+            return 0f;
+        }
+
+        return forwardMovement / Time.deltaTime;
+    }
+
+    private bool IsSidewaysMovement(Vector3 handDelta, Vector3 sideVector)
+    {
+        return Vector3.Dot(sideVector, handDelta.normalized) >= SIDE_MOVEMENT_THRESHOLD;
+    }
+    #endregion
+
+    #region Smoothing
+    private float ApplySmoothing(float currentSpeed)
+    {
+        if (speedBuffer.Count >= bufferWindowSize)
+        {
+            speedBuffer.Dequeue();
+        }
+        
+        speedBuffer.Enqueue(currentSpeed);
+        return speedBuffer.Average();
+    }
+    #endregion
 }
 

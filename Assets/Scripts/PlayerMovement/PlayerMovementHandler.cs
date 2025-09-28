@@ -1,103 +1,255 @@
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using Oculus.Avatar2;
 using UnityEngine;
+using Oculus.Avatar2;
 
 [RequireComponent(typeof(Armswing))]
-//[RequireComponent(typeof(CharacterController))]
+[RequireComponent(typeof(CharacterController))]
 public class PlayerMovementHandler : MonoBehaviour
 {
-    PlayerMovementData m_data;
-    MecanimLegsAnimationController mecanimLegsAnimationController;
-    Armswing m_armSwing;
-    CharacterController m_characterController;
+    #region Constants
+    private const float ANIMATION_MIN_VALUE = -0.02f;
+    private const float ANIMATION_MAX_VALUE = 0.02f;
+    #endregion
 
-    PlayerNetworkInfo m_playerNetworkInfo;
+    #region Inspector Fields
+    [Header("Animation Limits")]
+    [SerializeField] private float animationMinValue = ANIMATION_MIN_VALUE;
+    [SerializeField] private float animationMaxValue = ANIMATION_MAX_VALUE;
 
-    [SerializeField] float MAXVALUE = 0.01f;
-    [SerializeField] float MINVALUE = -0.02f;
+    [Header("Debug")]
+    [SerializeField] private bool enableDebugLogs = false;
+    #endregion
 
-    // Start is called before the first frame update
-    void Start()
+    #region Private Fields
+    // Movement data
+    private PlayerMovementData movementData;
+    
+    // Component references
+    private Armswing armSwing;
+    private CharacterController characterController;
+    private MecanimLegsAnimationController legsAnimationController;
+    private PlayerNetworkInfo playerNetworkInfo;
+    
+    // Initialization flags
+    private bool isInitialized = false;
+    #endregion
+
+    #region Properties
+    public PlayerMovementData MovementData => movementData;
+    public bool IsMovementEnabled { get; private set; }
+    #endregion
+
+    #region Unity Lifecycle
+    private void Start()
     {
-        m_armSwing = GetComponent<Armswing>();
-        m_characterController = GetComponent<CharacterController>();
-        m_data = new PlayerMovementData(transform.position, Vector3.zero, 0, 0);
+        InitializeComponents();
+        InitializeMovementData();
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        if (mecanimLegsAnimationController == null)
+        if (!TryCompleteInitialization()) return;
+
+        UpdateMovementData();
+        HandlePlayerMovement();
+        UpdateNetworkInformation();
+    }
+    #endregion
+
+    #region Initialization
+    private void InitializeComponents()
+    {
+        armSwing = GetComponent<Armswing>();
+        characterController = GetComponent<CharacterController>();
+        
+        if (armSwing == null)
         {
-            mecanimLegsAnimationController = GameManager.LocalPlayerObject?.GetComponentInChildren<MecanimLegsAnimationController>();
-            //Debug.LogError("[Movement]MecanimLegsAnimationController is null");
-            return;
+            LogError("Armswing component not found!");
         }
-        if (m_armSwing == null)
+        
+        if (characterController == null)
         {
-            m_armSwing = GetComponent<Armswing>();
-            //Debug.LogError("[Movement] Armswing is null");
-            return;
+            LogError("CharacterController component not found!");
+        }
+    }
+
+    private void InitializeMovementData()
+    {
+        movementData = new PlayerMovementData(transform.position, Vector3.zero, 0, 0);
+    }
+
+    private bool TryCompleteInitialization()
+    {
+        if (isInitialized) return true;
+
+        // Try to get legs animation controller
+        if (legsAnimationController == null)
+        {
+            legsAnimationController = GameManager.LocalPlayerObject?.GetComponentInChildren<MecanimLegsAnimationController>();
+            if (legsAnimationController == null) return false;
         }
 
-        SetMovementData(m_armSwing.GetSpeedFromSwings());
-
-        if (CheckPlayerInput())
+        // Try to get player network info
+        if (playerNetworkInfo == null)
         {
-            //if the player has movement enabled
-            moveplayer();
+            playerNetworkInfo = GameManager.LocalPlayerObject?.GetComponent<PlayerNetworkInfo>();
+            if (playerNetworkInfo == null) return false;
+        }
+
+        isInitialized = true;
+        LogDebug("PlayerMovementHandler initialization complete");
+        return true;
+    }
+    #endregion
+
+    #region Movement Processing
+    private void UpdateMovementData()
+    {
+        if (armSwing == null) return;
+
+        movementData = armSwing.GetSpeedFromSwings();
+    }
+
+    private void HandlePlayerMovement()
+    {
+        IsMovementEnabled = CheckPlayerInput();
+
+        if (IsMovementEnabled)
+        {
+            MovePlayer();
         }
         else
         {
-            mecanimLegsAnimationController.armswing = Vector3.zero;
+            StopPlayerMovement();
         }
+    }
 
-        if (m_playerNetworkInfo == null)
+    private bool CheckPlayerInput()
+    {
+        return OVRInput.Get(OVRInput.Touch.PrimaryThumbRest) ||
+               OVRInput.Get(OVRInput.Touch.SecondaryThumbRest) ||
+               OVRInput.Get(OVRInput.Touch.One) ||
+               OVRInput.Get(OVRInput.Touch.Two) ||
+               OVRInput.Get(OVRInput.Touch.Three) ||
+               OVRInput.Get(OVRInput.Touch.Four);
+    }
+
+    private void MovePlayer()
+    {
+        if (characterController == null) return;
+
+        // Calculate and apply movement
+        Vector3 movementVector = CalculateMovementVector();
+        characterController.SimpleMove(movementVector);
+
+        // Update leg animations
+        UpdateLegAnimations(movementVector);
+
+        LogDebug($"Player moved: {movementVector}, Speed: {movementData.Speed}");
+    }
+
+    private Vector3 CalculateMovementVector()
+    {
+        return movementData.Speed * movementData.Direction * Time.deltaTime;
+    }
+
+    private void UpdateLegAnimations(Vector3 movementVector)
+    {
+        if (legsAnimationController == null) return;
+
+        // Map movement to animation range
+        Vector3 animationValue = new Vector3(
+            Mathf.Lerp(animationMinValue, animationMaxValue, NormalizeMovementComponent(movementVector.x)),
+            0f,
+            Mathf.Lerp(animationMinValue, animationMaxValue, NormalizeMovementComponent(movementVector.z))
+        );
+
+        legsAnimationController.armswing = animationValue;
+    }
+
+    private float NormalizeMovementComponent(float component)
+    {
+        // Normalize the movement component to 0-1 range for lerping
+        // This assumes movement values are typically between -1 and 1
+        return Mathf.Clamp01((component + 1f) * 0.5f);
+    }
+
+    private void StopPlayerMovement()
+    {
+        if (legsAnimationController != null)
         {
-            m_playerNetworkInfo = GameManager.LocalPlayerObject?.GetComponent<PlayerNetworkInfo>();
-            //Debug.LogError("[Movement] PlayerNetworkInfo is null");
-            return;
+            legsAnimationController.armswing = Vector3.zero;
         }
-        UpdateNetworkInfo();
     }
+    #endregion
 
-    void UpdateNetworkInfo()
+    #region Network Updates
+    private void UpdateNetworkInformation()
     {
-        GameManager.LocalPlayerObject?.GetComponent<PlayerNetworkInfo>().UpdateValues(
-            m_data.Direction,
-            m_data.Speed,
-            m_data.CycleDuration
-            );
+        if (playerNetworkInfo == null) return;
+
+        playerNetworkInfo.UpdateValues(
+            movementData.Direction,
+            movementData.Speed,
+            movementData.CycleDuration
+        );
     }
+    #endregion
 
-
-    bool CheckPlayerInput()
-    {
-        return
-        (OVRInput.Get(OVRInput.Touch.PrimaryThumbRest) || OVRInput.Get(OVRInput.Touch.SecondaryThumbRest)
-                || OVRInput.Get(OVRInput.Touch.One) || OVRInput.Get(OVRInput.Touch.Two)
-                || OVRInput.Get(OVRInput.Touch.Three) || OVRInput.Get(OVRInput.Touch.Four));
-    }
-
-    private void moveplayer()
-    {
-        Vector3 value = m_data.Speed * m_data.Direction * Time.deltaTime;
-        mecanimLegsAnimationController.armswing = new Vector3(Mathf.Lerp(MINVALUE, MAXVALUE, value.x), 0, Mathf.Lerp(MINVALUE, MAXVALUE, value.z));
-        m_characterController.SimpleMove(value);
-    }
-
-
-
+    #region Public Interface
+    /// <summary>
+    /// Sets the movement data for the player
+    /// </summary>
+    /// <param name="data">The movement data to set</param>
     public void SetMovementData(PlayerMovementData data)
     {
-        m_data = data;
+        movementData = data;
     }
 
+    /// <summary>
+    /// Gets the current movement data
+    /// </summary>
+    /// <returns>Current player movement data</returns>
     public PlayerMovementData GetMovementData()
     {
-        return m_data;
+        return movementData;
     }
 
+    /// <summary>
+    /// Forces a stop of all player movement
+    /// </summary>
+    public void ForceStopMovement()
+    {
+        IsMovementEnabled = false;
+        StopPlayerMovement();
+    }
+    #endregion
+
+    #region Validation
+    private void OnValidate()
+    {
+        // Ensure animation values are in correct order
+        if (animationMinValue > animationMaxValue)
+        {
+            float temp = animationMinValue;
+            animationMinValue = animationMaxValue;
+            animationMaxValue = temp;
+        }
+    }
+    #endregion
+
+    #region Debug Utilities
+    private void LogDebug(string message)
+    {
+        if (enableDebugLogs)
+        {
+            Debug.Log($"[PlayerMovementHandler] {message}");
+        }
+    }
+
+    private void LogError(string message)
+    {
+        Debug.LogError($"[PlayerMovementHandler] {message}", this);
+    }
+    #endregion
 }

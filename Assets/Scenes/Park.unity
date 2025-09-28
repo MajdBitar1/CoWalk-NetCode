@@ -25608,8 +25608,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a9c139ce34125bc4a83e732a6486c6ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  MAXVALUE: 0.02
-  MINVALUE: -0.02
+  animationMinValue: -0.02
+  animationMaxValue: 0.02
+  enableDebugLogs: 0
 --- !u!114 &2063694571
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -25622,15 +25623,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d928d2bc097d34f42bf6d27292b43e8c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _Lefthand: {fileID: 2064665152}
-  _RightHand: {fileID: 651970633}
-  _Head: {fileID: 1708716193}
-  _Hips: {fileID: 1319991085}
-  MovementAmplifier: 150
+  leftHand: {fileID: 2064665152}
+  rightHand: {fileID: 651970633}
+  head: {fileID: 1708716193}
+  hips: {fileID: 1319991085}
+  movementAmplifier: 150
   friction: 1.3
-  MinimumPlayerSpeedThreshold: 150
-  MaximumPlayerSpeedThreshold: 500
-  BufferWindow: 60
+  minimumSpeedThreshold: 150
+  maximumSpeedThreshold: 500
+  bufferWindowSize: 60
 --- !u!4 &2063694573
 Transform:
   m_ObjectHideFlags: 0
